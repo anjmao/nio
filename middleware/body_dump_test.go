@@ -8,17 +8,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBodyDump(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	hw := "Hello, World!"
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(hw))
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	h := func(c dapi.Context) error {
+	h := func(c nio.Context) error {
 		body, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			return err
@@ -28,7 +28,7 @@ func TestBodyDump(t *testing.T) {
 
 	requestBody := ""
 	responseBody := ""
-	mw := BodyDump(func(c dapi.Context, reqBody, resBody []byte) {
+	mw := BodyDump(func(c nio.Context, reqBody, resBody []byte) {
 		requestBody = string(reqBody)
 		responseBody = string(resBody)
 	})
@@ -45,7 +45,7 @@ func TestBodyDump(t *testing.T) {
 	// Must set default skipper
 	BodyDumpWithConfig(BodyDumpConfig{
 		Skipper: nil,
-		Handler: func(c dapi.Context, reqBody, resBody []byte) {
+		Handler: func(c nio.Context, reqBody, resBody []byte) {
 			requestBody = string(reqBody)
 			responseBody = string(resBody)
 		},
@@ -53,16 +53,16 @@ func TestBodyDump(t *testing.T) {
 }
 
 func TestBodyDumpFails(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	hw := "Hello, World!"
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(hw))
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	h := func(c dapi.Context) error {
+	h := func(c nio.Context) error {
 		return errors.New("some error")
 	}
 
-	mw := BodyDump(func(c dapi.Context, reqBody, resBody []byte) {})
+	mw := BodyDump(func(c nio.Context, reqBody, resBody []byte) {})
 
 	if !assert.Error(t, mw(h)(c)) {
 		t.FailNow()
@@ -77,10 +77,10 @@ func TestBodyDumpFails(t *testing.T) {
 
 	assert.NotPanics(t, func() {
 		mw = BodyDumpWithConfig(BodyDumpConfig{
-			Skipper: func(c dapi.Context) bool {
+			Skipper: func(c nio.Context) bool {
 				return true
 			},
-			Handler: func(c dapi.Context, reqBody, resBody []byte) {
+			Handler: func(c nio.Context, reqBody, resBody []byte) {
 			},
 		})
 

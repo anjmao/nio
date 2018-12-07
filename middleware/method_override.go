@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -13,19 +13,19 @@ type (
 		Skipper Skipper
 
 		// Getter is a function that gets overridden method from the request.
-		// Optional. Default values MethodFromHeader(dapi.HeaderXHTTPMethodOverride).
+		// Optional. Default values MethodFromHeader(nio.HeaderXHTTPMethodOverride).
 		Getter MethodOverrideGetter
 	}
 
 	// MethodOverrideGetter is a function that gets overridden method from the request
-	MethodOverrideGetter func(dapi.Context) string
+	MethodOverrideGetter func(nio.Context) string
 )
 
 var (
 	// DefaultMethodOverrideConfig is the default MethodOverride middleware config.
 	DefaultMethodOverrideConfig = MethodOverrideConfig{
 		Skipper: DefaultSkipper,
-		Getter:  MethodFromHeader(dapi.HeaderXHTTPMethodOverride),
+		Getter:  MethodFromHeader(nio.HeaderXHTTPMethodOverride),
 	}
 )
 
@@ -34,13 +34,13 @@ var (
 // uses it instead of the original method.
 //
 // For security reasons, only `POST` method can be overridden.
-func MethodOverride() dapi.MiddlewareFunc {
+func MethodOverride() nio.MiddlewareFunc {
 	return MethodOverrideWithConfig(DefaultMethodOverrideConfig)
 }
 
 // MethodOverrideWithConfig returns a MethodOverride middleware with config.
 // See: `MethodOverride()`.
-func MethodOverrideWithConfig(config MethodOverrideConfig) dapi.MiddlewareFunc {
+func MethodOverrideWithConfig(config MethodOverrideConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultMethodOverrideConfig.Skipper
@@ -49,8 +49,8 @@ func MethodOverrideWithConfig(config MethodOverrideConfig) dapi.MiddlewareFunc {
 		config.Getter = DefaultMethodOverrideConfig.Getter
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -70,7 +70,7 @@ func MethodOverrideWithConfig(config MethodOverrideConfig) dapi.MiddlewareFunc {
 // MethodFromHeader is a `MethodOverrideGetter` that gets overridden method from
 // the request header.
 func MethodFromHeader(header string) MethodOverrideGetter {
-	return func(c dapi.Context) string {
+	return func(c nio.Context) string {
 		return c.Request().Header.Get(header)
 	}
 }
@@ -78,7 +78,7 @@ func MethodFromHeader(header string) MethodOverrideGetter {
 // MethodFromForm is a `MethodOverrideGetter` that gets overridden method from the
 // form parameter.
 func MethodFromForm(param string) MethodOverrideGetter {
-	return func(c dapi.Context) string {
+	return func(c nio.Context) string {
 		return c.FormValue(param)
 	}
 }
@@ -86,7 +86,7 @@ func MethodFromForm(param string) MethodOverrideGetter {
 // MethodFromQuery is a `MethodOverrideGetter` that gets overridden method from
 // the query parameter.
 func MethodFromQuery(param string) MethodOverrideGetter {
-	return func(c dapi.Context) string {
+	return func(c nio.Context) string {
 		return c.QueryParam(param)
 	}
 }

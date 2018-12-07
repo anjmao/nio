@@ -1,4 +1,4 @@
-# dapi
+# nio
 
 
 
@@ -10,13 +10,13 @@ package main
 import (
 	"net/http"
 
-	"github.com/dostack/dapi"
-	"github.com/dostack/dapi/middleware"
+	"github.com/dostack/nio"
+	"github.com/dostack/nio/middleware"
 )
 
 func main() {
-	// Dapi instance
-	d := dapi.New()
+	// Nio instance
+	d := nio.New()
 
 	// Middleware
 	d.Use(middleware.Logger())
@@ -30,7 +30,7 @@ func main() {
 }
 
 // Handler
-func hello(c dapi.Context) error {
+func hello(c nio.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
 }
 ```

@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,7 +39,7 @@ func TestProxy_1_11(t *testing.T) {
 	}
 
 	// Random
-	e := dapi.New()
+	e := nio.New()
 	e.Use(Proxy(rb))
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := newCloseNotifyRecorder()

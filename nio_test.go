@@ -1,4 +1,4 @@
-package dapi
+package nio
 
 import (
 	"bytes"
@@ -41,7 +41,7 @@ const userXMLPretty = `<user>
   <name>Jon Snow</name>
 </user>`
 
-func TestDapi(t *testing.T) {
+func TestNio(t *testing.T) {
 	e := New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
@@ -55,7 +55,7 @@ func TestDapi(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
-func TestDapiStatic(t *testing.T) {
+func TestNioStatic(t *testing.T) {
 	e := New()
 
 	assert := assert.New(t)
@@ -88,7 +88,7 @@ func TestDapiStatic(t *testing.T) {
 	assert.Equal(true, strings.HasPrefix(r, "<!doctype html>"))
 }
 
-func TestDapiFile(t *testing.T) {
+func TestNioFile(t *testing.T) {
 	e := New()
 	e.File("/walle", "_fixture/images/walle.png")
 	c, b := request(http.MethodGet, "/walle", e)
@@ -96,7 +96,7 @@ func TestDapiFile(t *testing.T) {
 	assert.NotEmpty(t, b)
 }
 
-func TestDapiMiddleware(t *testing.T) {
+func TestNioMiddleware(t *testing.T) {
 	e := New()
 	buf := new(bytes.Buffer)
 
@@ -140,7 +140,7 @@ func TestDapiMiddleware(t *testing.T) {
 	assert.Equal(t, "OK", b)
 }
 
-func TestDapiMiddlewareError(t *testing.T) {
+func TestNioMiddlewareError(t *testing.T) {
 	e := New()
 	e.Use(func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
@@ -152,7 +152,7 @@ func TestDapiMiddlewareError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, c)
 }
 
-func TestDapiHandler(t *testing.T) {
+func TestNioHandler(t *testing.T) {
 	e := New()
 
 	// HandlerFunc
@@ -165,7 +165,7 @@ func TestDapiHandler(t *testing.T) {
 	assert.Equal(t, "OK", b)
 }
 
-func TestDapiWrapHandler(t *testing.T) {
+func TestNioWrapHandler(t *testing.T) {
 	e := New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
@@ -180,7 +180,7 @@ func TestDapiWrapHandler(t *testing.T) {
 	}
 }
 
-func TestDapiWrapMiddleware(t *testing.T) {
+func TestNioWrapMiddleware(t *testing.T) {
 	e := New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
@@ -202,66 +202,66 @@ func TestDapiWrapMiddleware(t *testing.T) {
 	}
 }
 
-func TestDapiConnect(t *testing.T) {
+func TestNioConnect(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodConnect, "/", e)
 }
 
-func TestDapiDelete(t *testing.T) {
+func TestNioDelete(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodDelete, "/", e)
 }
 
-func TestDapiGet(t *testing.T) {
+func TestNioGet(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodGet, "/", e)
 }
 
-func TestDapiHead(t *testing.T) {
+func TestNioHead(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodHead, "/", e)
 }
 
-func TestDapiOptions(t *testing.T) {
+func TestNioOptions(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodOptions, "/", e)
 }
 
-func TestDapiPatch(t *testing.T) {
+func TestNioPatch(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodPatch, "/", e)
 }
 
-func TestDapiPost(t *testing.T) {
+func TestNioPost(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodPost, "/", e)
 }
 
-func TestDapiPut(t *testing.T) {
+func TestNioPut(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodPut, "/", e)
 }
 
-func TestDapiTrace(t *testing.T) {
+func TestNioTrace(t *testing.T) {
 	e := New()
 	testMethod(t, http.MethodTrace, "/", e)
 }
 
-func TestDapiAny(t *testing.T) { // JFC
+func TestNioAny(t *testing.T) { // JFC
 	e := New()
 	e.Any("/", func(c Context) error {
 		return c.String(http.StatusOK, "Any")
 	})
 }
 
-func TestDapiMatch(t *testing.T) { // JFC
+func TestNioMatch(t *testing.T) { // JFC
 	e := New()
 	e.Match([]string{http.MethodGet, http.MethodPost}, "/", func(c Context) error {
 		return c.String(http.StatusOK, "Match")
 	})
 }
 
-func TestDapiURL(t *testing.T) {
+func TestNioURL(t *testing.T) {
 	e := New()
 	static := func(Context) error { return nil }
 	getUser := func(Context) error { return nil }
@@ -281,7 +281,7 @@ func TestDapiURL(t *testing.T) {
 	assert.Equal("/group/users/1/files/1", e.URL(getFile, "1", "1"))
 }
 
-func TestDapiRoutes(t *testing.T) {
+func TestNioRoutes(t *testing.T) {
 	e := New()
 	routes := []*Route{
 		{http.MethodGet, "/users/:user/events", ""},
@@ -311,7 +311,7 @@ func TestDapiRoutes(t *testing.T) {
 	}
 }
 
-func TestDapiEncodedPath(t *testing.T) {
+func TestNioEncodedPath(t *testing.T) {
 	e := New()
 	e.GET("/:id", func(c Context) error {
 		return c.NoContent(http.StatusOK)
@@ -322,7 +322,7 @@ func TestDapiEncodedPath(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
-func TestDapiGroup(t *testing.T) {
+func TestNioGroup(t *testing.T) {
 	e := New()
 	buf := new(bytes.Buffer)
 	e.Use(MiddlewareFunc(func(next HandlerFunc) HandlerFunc {
@@ -380,7 +380,7 @@ func TestDapiGroup(t *testing.T) {
 	assert.Equal(t, "023", buf.String())
 }
 
-func TestDapiNotFound(t *testing.T) {
+func TestNioNotFound(t *testing.T) {
 	e := New()
 	req := httptest.NewRequest(http.MethodGet, "/files", nil)
 	rec := httptest.NewRecorder()
@@ -388,10 +388,10 @@ func TestDapiNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
-func TestDapiMethodNotAllowed(t *testing.T) {
+func TestNioMethodNotAllowed(t *testing.T) {
 	e := New()
 	e.GET("/", func(c Context) error {
-		return c.String(http.StatusOK, "Dapi!")
+		return c.String(http.StatusOK, "Nio!")
 	})
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -399,14 +399,14 @@ func TestDapiMethodNotAllowed(t *testing.T) {
 	assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
 }
 
-func TestDapiContext(t *testing.T) {
+func TestNioContext(t *testing.T) {
 	e := New()
 	c := e.AcquireContext()
 	assert.IsType(t, new(context), c)
 	e.ReleaseContext(c)
 }
 
-func TestDapiStart(t *testing.T) {
+func TestNioStart(t *testing.T) {
 	e := New()
 	go func() {
 		assert.NoError(t, e.Start(":0"))
@@ -414,7 +414,7 @@ func TestDapiStart(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 }
 
-func TestDapiStartTLS(t *testing.T) {
+func TestNioStartTLS(t *testing.T) {
 	e := New()
 	go func() {
 		err := e.StartTLS(":0", "_fixture/certs/cert.pem", "_fixture/certs/key.pem")
@@ -428,7 +428,7 @@ func TestDapiStartTLS(t *testing.T) {
 	e.Close()
 }
 
-func testMethod(t *testing.T, method, path string, e *Dapi) {
+func testMethod(t *testing.T, method, path string, e *Nio) {
 	p := reflect.ValueOf(path)
 	h := reflect.ValueOf(func(c Context) error {
 		return c.String(http.StatusOK, method)
@@ -439,7 +439,7 @@ func testMethod(t *testing.T, method, path string, e *Dapi) {
 	assert.Equal(t, method, body)
 }
 
-func request(method, path string, e *Dapi) (int, string) {
+func request(method, path string, e *Nio) (int, string) {
 	req := httptest.NewRequest(method, path, nil)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
@@ -453,7 +453,7 @@ func TestHTTPError(t *testing.T) {
 	assert.Equal(t, "code=400, message=map[code:12]", err.Error())
 }
 
-func TestDapiClose(t *testing.T) {
+func TestNioClose(t *testing.T) {
 	e := New()
 	errCh := make(chan error)
 
@@ -473,7 +473,7 @@ func TestDapiClose(t *testing.T) {
 	assert.Equal(t, err.Error(), "http: Server closed")
 }
 
-func TestDapiShutdown(t *testing.T) {
+func TestNioShutdown(t *testing.T) {
 	e := New()
 	errCh := make(chan error)
 

@@ -6,21 +6,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMethodOverride(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	m := MethodOverride()
-	h := func(c dapi.Context) error {
+	h := func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	}
 
 	// Override with http header
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
-	req.Header.Set(dapi.HeaderXHTTPMethodOverride, http.MethodDelete)
+	req.Header.Set(nio.HeaderXHTTPMethodOverride, http.MethodDelete)
 	c := e.NewContext(req, rec)
 	m(h)(c)
 	assert.Equal(t, http.MethodDelete, req.Method)
@@ -29,7 +29,7 @@ func TestMethodOverride(t *testing.T) {
 	m = MethodOverrideWithConfig(MethodOverrideConfig{Getter: MethodFromForm("_method")})
 	req = httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte("_method="+http.MethodDelete)))
 	rec = httptest.NewRecorder()
-	req.Header.Set(dapi.HeaderContentType, dapi.MIMEApplicationForm)
+	req.Header.Set(nio.HeaderContentType, nio.MIMEApplicationForm)
 	c = e.NewContext(req, rec)
 	m(h)(c)
 	assert.Equal(t, http.MethodDelete, req.Method)
@@ -44,6 +44,6 @@ func TestMethodOverride(t *testing.T) {
 
 	// Ignore `GET`
 	req = httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set(dapi.HeaderXHTTPMethodOverride, http.MethodDelete)
+	req.Header.Set(nio.HeaderXHTTPMethodOverride, http.MethodDelete)
 	assert.Equal(t, http.MethodGet, req.Method)
 }

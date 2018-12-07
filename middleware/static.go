@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dostack/dapi"
-	"github.com/dostack/dapi/internal/bytes"
+	"github.com/dostack/nio"
+	"github.com/dostack/nio/internal/bytes"
 )
 
 type (
@@ -121,7 +121,7 @@ var (
 
 // Static returns a Static middleware to serves static content from the provided
 // root directory.
-func Static(root string) dapi.MiddlewareFunc {
+func Static(root string) nio.MiddlewareFunc {
 	c := DefaultStaticConfig
 	c.Root = root
 	return StaticWithConfig(c)
@@ -129,7 +129,7 @@ func Static(root string) dapi.MiddlewareFunc {
 
 // StaticWithConfig returns a Static middleware with config.
 // See `Static()`.
-func StaticWithConfig(config StaticConfig) dapi.MiddlewareFunc {
+func StaticWithConfig(config StaticConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Root == "" {
 		config.Root = "." // For security we want to restrict to CWD.
@@ -144,11 +144,11 @@ func StaticWithConfig(config StaticConfig) dapi.MiddlewareFunc {
 	// Index template
 	t, err := template.New("index").Parse(html)
 	if err != nil {
-		panic(fmt.Sprintf("dapi: %v", err))
+		panic(fmt.Sprintf("nio: %v", err))
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) (err error) {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) (err error) {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -167,7 +167,7 @@ func StaticWithConfig(config StaticConfig) dapi.MiddlewareFunc {
 			if err != nil {
 				if os.IsNotExist(err) {
 					if err = next(c); err != nil {
-						if he, ok := err.(*dapi.HTTPError); ok {
+						if he, ok := err.(*nio.HTTPError); ok {
 							if config.HTML5 && he.Code == http.StatusNotFound {
 								return c.File(filepath.Join(config.Root, config.Index))
 							}
@@ -200,7 +200,7 @@ func StaticWithConfig(config StaticConfig) dapi.MiddlewareFunc {
 	}
 }
 
-func listDir(t *template.Template, name string, res *dapi.Response) (err error) {
+func listDir(t *template.Template, name string, res *nio.Response) (err error) {
 	file, err := os.Open(name)
 	if err != nil {
 		return
@@ -211,7 +211,7 @@ func listDir(t *template.Template, name string, res *dapi.Response) (err error) 
 	}
 
 	// Create directory index
-	res.Header().Set(dapi.HeaderContentType, dapi.MIMETextHTMLCharsetUTF8)
+	res.Header().Set(nio.HeaderContentType, nio.MIMETextHTMLCharsetUTF8)
 	data := struct {
 		Name  string
 		Files []interface{}

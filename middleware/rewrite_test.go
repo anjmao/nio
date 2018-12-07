@@ -6,12 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRewrite(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	e.Use(RewriteWithConfig(RewriteConfig{
 		Rules: map[string]string{
 			"/old":              "/new",
@@ -40,8 +40,8 @@ func TestRewrite(t *testing.T) {
 }
 
 // Issue #1086
-func TestDapiRewritePreMiddleware(t *testing.T) {
-	e := dapi.New()
+func TestNioRewritePreMiddleware(t *testing.T) {
+	e := nio.New()
 	r := e.Router()
 
 	// Rewrite old url to new one
@@ -52,7 +52,7 @@ func TestDapiRewritePreMiddleware(t *testing.T) {
 	}))
 
 	// Route
-	r.Add(http.MethodGet, "/new", func(c dapi.Context) error {
+	r.Add(http.MethodGet, "/new", func(c nio.Context) error {
 		return c.NoContent(200)
 	})
 
@@ -65,7 +65,7 @@ func TestDapiRewritePreMiddleware(t *testing.T) {
 
 // Issue #1143
 func TestRewriteWithConfigPreMiddleware_Issue1143(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	r := e.Router()
 
 	e.Pre(RewriteWithConfig(RewriteConfig{
@@ -75,10 +75,10 @@ func TestRewriteWithConfigPreMiddleware_Issue1143(t *testing.T) {
 		},
 	}))
 
-	r.Add(http.MethodGet, "/api/:version/hosts/:name", func(c dapi.Context) error {
+	r.Add(http.MethodGet, "/api/:version/hosts/:name", func(c nio.Context) error {
 		return c.String(200, "hosts")
 	})
-	r.Add(http.MethodGet, "/api/:version/eng", func(c dapi.Context) error {
+	r.Add(http.MethodGet, "/api/:version/eng", func(c nio.Context) error {
 		return c.String(200, "eng")
 	})
 

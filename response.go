@@ -1,4 +1,4 @@
-package dapi
+package nio
 
 import (
 	"bufio"
@@ -11,7 +11,7 @@ type (
 	// by an HTTP handler to construct an HTTP response.
 	// See: https://golang.org/pkg/net/http/#ResponseWriter
 	Response struct {
-		dapi        *Dapi
+		nio        *Nio
 		beforeFuncs []func()
 		afterFuncs  []func()
 		Writer      http.ResponseWriter
@@ -22,8 +22,8 @@ type (
 )
 
 // NewResponse creates a new instance of Response.
-func NewResponse(w http.ResponseWriter, e *Dapi) (r *Response) {
-	return &Response{Writer: w, dapi: e}
+func NewResponse(w http.ResponseWriter, e *Nio) (r *Response) {
+	return &Response{Writer: w, nio: e}
 }
 
 // Header returns the header map for the writer that will be sent by
@@ -53,7 +53,7 @@ func (r *Response) After(fn func()) {
 // used to send error codes.
 func (r *Response) WriteHeader(code int) {
 	if r.Committed {
-		r.dapi.Logger.Warn("response already committed")
+		r.nio.Logger.Warn("response already committed")
 		return
 	}
 	for _, fn := range r.beforeFuncs {

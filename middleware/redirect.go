@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 // RedirectConfig defines the config for Redirect middleware.
@@ -32,14 +32,14 @@ var DefaultRedirectConfig = RedirectConfig{
 // HTTPSRedirect redirects http requests to https.
 // For example, http://dostack.com will be redirect to https://dostack.com.
 //
-// Usage `Dapi#Pre(HTTPSRedirect())`
-func HTTPSRedirect() dapi.MiddlewareFunc {
+// Usage `Nio#Pre(HTTPSRedirect())`
+func HTTPSRedirect() nio.MiddlewareFunc {
 	return HTTPSRedirectWithConfig(DefaultRedirectConfig)
 }
 
 // HTTPSRedirectWithConfig returns an HTTPSRedirect middleware with config.
 // See `HTTPSRedirect()`.
-func HTTPSRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
+func HTTPSRedirectWithConfig(config RedirectConfig) nio.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
 		if ok = scheme != "https"; ok {
 			url = "https://" + host + uri
@@ -51,14 +51,14 @@ func HTTPSRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
 // HTTPSWWWRedirect redirects http requests to https www.
 // For example, http://dostack.com will be redirect to https://www.dostack.com.
 //
-// Usage `Dapi#Pre(HTTPSWWWRedirect())`
-func HTTPSWWWRedirect() dapi.MiddlewareFunc {
+// Usage `Nio#Pre(HTTPSWWWRedirect())`
+func HTTPSWWWRedirect() nio.MiddlewareFunc {
 	return HTTPSWWWRedirectWithConfig(DefaultRedirectConfig)
 }
 
 // HTTPSWWWRedirectWithConfig returns an HTTPSRedirect middleware with config.
 // See `HTTPSWWWRedirect()`.
-func HTTPSWWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
+func HTTPSWWWRedirectWithConfig(config RedirectConfig) nio.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
 		if ok = scheme != "https" && host[:3] != www; ok {
 			url = "https://www." + host + uri
@@ -70,14 +70,14 @@ func HTTPSWWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
 // HTTPSNonWWWRedirect redirects http requests to https non www.
 // For example, http://www.dostack.com will be redirect to https://dostack.com.
 //
-// Usage `Dapi#Pre(HTTPSNonWWWRedirect())`
-func HTTPSNonWWWRedirect() dapi.MiddlewareFunc {
+// Usage `Nio#Pre(HTTPSNonWWWRedirect())`
+func HTTPSNonWWWRedirect() nio.MiddlewareFunc {
 	return HTTPSNonWWWRedirectWithConfig(DefaultRedirectConfig)
 }
 
 // HTTPSNonWWWRedirectWithConfig returns an HTTPSRedirect middleware with config.
 // See `HTTPSNonWWWRedirect()`.
-func HTTPSNonWWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
+func HTTPSNonWWWRedirectWithConfig(config RedirectConfig) nio.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
 		if ok = scheme != "https"; ok {
 			if host[:3] == www {
@@ -92,14 +92,14 @@ func HTTPSNonWWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
 // WWWRedirect redirects non www requests to www.
 // For example, http://dostack.com will be redirect to http://www.dostack.com.
 //
-// Usage `Dapi#Pre(WWWRedirect())`
-func WWWRedirect() dapi.MiddlewareFunc {
+// Usage `Nio#Pre(WWWRedirect())`
+func WWWRedirect() nio.MiddlewareFunc {
 	return WWWRedirectWithConfig(DefaultRedirectConfig)
 }
 
 // WWWRedirectWithConfig returns an HTTPSRedirect middleware with config.
 // See `WWWRedirect()`.
-func WWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
+func WWWRedirectWithConfig(config RedirectConfig) nio.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
 		if ok = host[:3] != www; ok {
 			url = scheme + "://www." + host + uri
@@ -111,14 +111,14 @@ func WWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
 // NonWWWRedirect redirects www requests to non www.
 // For example, http://www.dostack.com will be redirect to http://dostack.com.
 //
-// Usage `Dapi#Pre(NonWWWRedirect())`
-func NonWWWRedirect() dapi.MiddlewareFunc {
+// Usage `Nio#Pre(NonWWWRedirect())`
+func NonWWWRedirect() nio.MiddlewareFunc {
 	return NonWWWRedirectWithConfig(DefaultRedirectConfig)
 }
 
 // NonWWWRedirectWithConfig returns an HTTPSRedirect middleware with config.
 // See `NonWWWRedirect()`.
-func NonWWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
+func NonWWWRedirectWithConfig(config RedirectConfig) nio.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
 		if ok = host[:3] == www; ok {
 			url = scheme + "://" + host[4:] + uri
@@ -127,7 +127,7 @@ func NonWWWRedirectWithConfig(config RedirectConfig) dapi.MiddlewareFunc {
 	})
 }
 
-func redirect(config RedirectConfig, cb redirectLogic) dapi.MiddlewareFunc {
+func redirect(config RedirectConfig, cb redirectLogic) nio.MiddlewareFunc {
 	if config.Skipper == nil {
 		config.Skipper = DefaultTrailingSlashConfig.Skipper
 	}
@@ -135,8 +135,8 @@ func redirect(config RedirectConfig, cb redirectLogic) dapi.MiddlewareFunc {
 		config.Code = DefaultRedirectConfig.Code
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}

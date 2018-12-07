@@ -1,4 +1,4 @@
-package dapi
+package nio
 
 import (
 	"bytes"
@@ -35,8 +35,8 @@ func TestContext(t *testing.T) {
 
 	assert := assert.New(t)
 
-	// Dapi
-	assert.Equal(e, c.Dapi())
+	// Nio
+	assert.Equal(e, c.Nio())
 
 	// Request
 	assert.NotNil(c.Request())
@@ -51,14 +51,14 @@ func TestContext(t *testing.T) {
 	tmpl := &Template{
 		templates: template.Must(template.New("hello").Parse("Hello, {{.}}!")),
 	}
-	c.dapi.Renderer = tmpl
+	c.nio.Renderer = tmpl
 	err := c.Render(http.StatusOK, "hello", "Jon Snow")
 	if assert.NoError(err) {
 		assert.Equal(http.StatusOK, rec.Code)
 		assert.Equal("Hello, Jon Snow!", rec.Body.String())
 	}
 
-	c.dapi.Renderer = nil
+	c.nio.Renderer = nil
 	err = c.Render(http.StatusOK, "hello", "Jon Snow")
 	assert.Error(err)
 
@@ -390,10 +390,10 @@ func TestContextRedirect(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	assert.Equal(t, nil, c.Redirect(http.StatusMovedPermanently, "http://dostack.github.io/dapi"))
+	assert.Equal(t, nil, c.Redirect(http.StatusMovedPermanently, "http://dostack.github.io/nio"))
 	assert.Equal(t, http.StatusMovedPermanently, rec.Code)
-	assert.Equal(t, "http://dostack.github.io/dapi", rec.Header().Get(HeaderLocation))
-	assert.Error(t, c.Redirect(310, "http://dostack.github.io/dapi"))
+	assert.Equal(t, "http://dostack.github.io/nio", rec.Header().Get(HeaderLocation))
+	assert.Error(t, c.Redirect(310, "http://dostack.github.io/nio"))
 }
 
 func TestContextStore(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -40,13 +40,13 @@ var (
 
 // Recover returns a middleware which recovers from panics anywhere in the chain
 // and handles the control to the centralized HTTPErrorHandler.
-func Recover() dapi.MiddlewareFunc {
+func Recover() nio.MiddlewareFunc {
 	return RecoverWithConfig(DefaultRecoverConfig)
 }
 
 // RecoverWithConfig returns a Recover middleware with config.
 // See: `Recover()`.
-func RecoverWithConfig(config RecoverConfig) dapi.MiddlewareFunc {
+func RecoverWithConfig(config RecoverConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultRecoverConfig.Skipper
@@ -55,8 +55,8 @@ func RecoverWithConfig(config RecoverConfig) dapi.MiddlewareFunc {
 		config.StackSize = DefaultRecoverConfig.StackSize
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}

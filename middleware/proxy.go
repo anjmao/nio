@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 // TODO: Handle TLS proxy
@@ -52,14 +52,14 @@ type (
 	ProxyTarget struct {
 		Name string
 		URL  *url.URL
-		Meta dapi.Map
+		Meta nio.Map
 	}
 
 	// ProxyBalancer defines an interface to implement a load balancing technique.
 	ProxyBalancer interface {
 		AddTarget(*ProxyTarget) bool
 		RemoveTarget(string) bool
-		Next(dapi.Context) *ProxyTarget
+		Next(nio.Context) *ProxyTarget
 	}
 
 	commonBalancer struct {
@@ -88,7 +88,7 @@ var (
 	}
 )
 
-func proxyRaw(t *ProxyTarget, c dapi.Context) http.Handler {
+func proxyRaw(t *ProxyTarget, c nio.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		in, _, err := c.Response().Hijack()
 		if err != nil {
@@ -99,7 +99,7 @@ func proxyRaw(t *ProxyTarget, c dapi.Context) http.Handler {
 
 		out, err := net.Dial("tcp", t.URL.Host)
 		if err != nil {
-			he := dapi.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("proxy raw, dial error=%v, url=%s", t.URL, err))
+			he := nio.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("proxy raw, dial error=%v, url=%s", t.URL, err))
 			c.Error(he)
 			return
 		}
@@ -108,7 +108,7 @@ func proxyRaw(t *ProxyTarget, c dapi.Context) http.Handler {
 		// Write header
 		err = r.Write(out)
 		if err != nil {
-			he := dapi.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("proxy raw, request header copy error=%v, url=%s", t.URL, err))
+			he := nio.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("proxy raw, request header copy error=%v, url=%s", t.URL, err))
 			c.Error(he)
 			return
 		}
@@ -169,7 +169,7 @@ func (b *commonBalancer) RemoveTarget(name string) bool {
 }
 
 // Next randomly returns an upstream target.
-func (b *randomBalancer) Next(c dapi.Context) *ProxyTarget {
+func (b *randomBalancer) Next(c nio.Context) *ProxyTarget {
 	if b.random == nil {
 		b.random = rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
 	}
@@ -179,7 +179,7 @@ func (b *randomBalancer) Next(c dapi.Context) *ProxyTarget {
 }
 
 // Next returns an upstream target using round-robin technique.
-func (b *roundRobinBalancer) Next(c dapi.Context) *ProxyTarget {
+func (b *roundRobinBalancer) Next(c nio.Context) *ProxyTarget {
 	b.i = b.i % uint32(len(b.targets))
 	t := b.targets[b.i]
 	atomic.AddUint32(&b.i, 1)
@@ -189,7 +189,7 @@ func (b *roundRobinBalancer) Next(c dapi.Context) *ProxyTarget {
 // Proxy returns a Proxy middleware.
 //
 // Proxy middleware forwards the request to upstream server using a configured load balancing technique.
-func Proxy(balancer ProxyBalancer) dapi.MiddlewareFunc {
+func Proxy(balancer ProxyBalancer) nio.MiddlewareFunc {
 	c := DefaultProxyConfig
 	c.Balancer = balancer
 	return ProxyWithConfig(c)
@@ -197,13 +197,13 @@ func Proxy(balancer ProxyBalancer) dapi.MiddlewareFunc {
 
 // ProxyWithConfig returns a Proxy middleware with config.
 // See: `Proxy()`
-func ProxyWithConfig(config ProxyConfig) dapi.MiddlewareFunc {
+func ProxyWithConfig(config ProxyConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultLoggerConfig.Skipper
 	}
 	if config.Balancer == nil {
-		panic("dapi: proxy middleware requires balancer")
+		panic("nio: proxy middleware requires balancer")
 	}
 	config.rewriteRegex = map[*regexp.Regexp]string{}
 
@@ -213,8 +213,8 @@ func ProxyWithConfig(config ProxyConfig) dapi.MiddlewareFunc {
 		config.rewriteRegex[regexp.MustCompile(k)] = v
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) (err error) {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) (err error) {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -233,21 +233,21 @@ func ProxyWithConfig(config ProxyConfig) dapi.MiddlewareFunc {
 			}
 
 			// Fix header
-			if req.Header.Get(dapi.HeaderXRealIP) == "" {
-				req.Header.Set(dapi.HeaderXRealIP, c.RealIP())
+			if req.Header.Get(nio.HeaderXRealIP) == "" {
+				req.Header.Set(nio.HeaderXRealIP, c.RealIP())
 			}
-			if req.Header.Get(dapi.HeaderXForwardedProto) == "" {
-				req.Header.Set(dapi.HeaderXForwardedProto, c.Scheme())
+			if req.Header.Get(nio.HeaderXForwardedProto) == "" {
+				req.Header.Set(nio.HeaderXForwardedProto, c.Scheme())
 			}
-			if c.IsWebSocket() && req.Header.Get(dapi.HeaderXForwardedFor) == "" { // For HTTP, it is automatically set by Go HTTP reverse proxy.
-				req.Header.Set(dapi.HeaderXForwardedFor, c.RealIP())
+			if c.IsWebSocket() && req.Header.Get(nio.HeaderXForwardedFor) == "" { // For HTTP, it is automatically set by Go HTTP reverse proxy.
+				req.Header.Set(nio.HeaderXForwardedFor, c.RealIP())
 			}
 
 			// Proxy
 			switch {
 			case c.IsWebSocket():
 				proxyRaw(tgt, c).ServeHTTP(res, req)
-			case req.Header.Get(dapi.HeaderAccept) == "text/event-stream":
+			case req.Header.Get(nio.HeaderAccept) == "text/event-stream":
 			default:
 				proxyHTTP(tgt, c, config).ServeHTTP(res, req)
 			}

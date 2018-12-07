@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/valyala/fasttemplate"
 )
 
@@ -76,13 +76,13 @@ var (
 )
 
 // Logger returns a middleware that logs HTTP requests.
-func Logger() dapi.MiddlewareFunc {
+func Logger() nio.MiddlewareFunc {
 	return LoggerWithConfig(DefaultLoggerConfig)
 }
 
 // LoggerWithConfig returns a Logger middleware with config.
 // See: `Logger()`.
-func LoggerWithConfig(config LoggerConfig) dapi.MiddlewareFunc {
+func LoggerWithConfig(config LoggerConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultLoggerConfig.Skipper
@@ -101,8 +101,8 @@ func LoggerWithConfig(config LoggerConfig) dapi.MiddlewareFunc {
 		},
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) (err error) {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) (err error) {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -131,9 +131,9 @@ func LoggerWithConfig(config LoggerConfig) dapi.MiddlewareFunc {
 				case "time_custom":
 					return buf.WriteString(time.Now().Format(config.CustomTimeFormat))
 				case "id":
-					id := req.Header.Get(dapi.HeaderXRequestID)
+					id := req.Header.Get(nio.HeaderXRequestID)
 					if id == "" {
-						id = res.Header().Get(dapi.HeaderXRequestID)
+						id = res.Header().Get(nio.HeaderXRequestID)
 					}
 					return buf.WriteString(id)
 				case "remote_ip":
@@ -168,7 +168,7 @@ func LoggerWithConfig(config LoggerConfig) dapi.MiddlewareFunc {
 				case "latency_human":
 					return buf.WriteString(stop.Sub(start).String())
 				case "bytes_in":
-					cl := req.Header.Get(dapi.HeaderContentLength)
+					cl := req.Header.Get(nio.HeaderContentLength)
 					if cl == "" {
 						cl = "0"
 					}

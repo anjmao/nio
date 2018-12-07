@@ -7,17 +7,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBodyLimit(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	hw := []byte("Hello, World!")
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(hw))
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	h := func(c dapi.Context) error {
+	h := func(c nio.Context) error {
 		body, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			return err
@@ -34,7 +34,7 @@ func TestBodyLimit(t *testing.T) {
 	}
 
 	// Based on content read (overlimit)
-	he := BodyLimit("2B")(h)(c).(*dapi.HTTPError)
+	he := BodyLimit("2B")(h)(c).(*nio.HTTPError)
 	assert.Equal(http.StatusRequestEntityTooLarge, he.Code)
 
 	// Based on content read (within limit)
@@ -50,13 +50,13 @@ func TestBodyLimit(t *testing.T) {
 	req = httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(hw))
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	he = BodyLimit("2B")(h)(c).(*dapi.HTTPError)
+	he = BodyLimit("2B")(h)(c).(*nio.HTTPError)
 	assert.Equal(http.StatusRequestEntityTooLarge, he.Code)
 }
 
 func TestBodyLimitReader(t *testing.T) {
 	hw := []byte("Hello, World!")
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(hw))
 	rec := httptest.NewRecorder()
 
@@ -73,7 +73,7 @@ func TestBodyLimitReader(t *testing.T) {
 
 	// read all should return ErrStatusRequestEntityTooLarge
 	_, err := ioutil.ReadAll(reader)
-	he := err.(*dapi.HTTPError)
+	he := err.(*nio.HTTPError)
 	assert.Equal(t, http.StatusRequestEntityTooLarge, he.Code)
 
 	// reset reader and read two bytes must succeed

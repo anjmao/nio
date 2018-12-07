@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -43,13 +43,13 @@ var (
 
 // Gzip returns a middleware which compresses HTTP response using gzip compression
 // scheme.
-func Gzip() dapi.MiddlewareFunc {
+func Gzip() nio.MiddlewareFunc {
 	return GzipWithConfig(DefaultGzipConfig)
 }
 
 // GzipWithConfig return Gzip middleware with config.
 // See: `Gzip()`.
-func GzipWithConfig(config GzipConfig) dapi.MiddlewareFunc {
+func GzipWithConfig(config GzipConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultGzipConfig.Skipper
@@ -58,16 +58,16 @@ func GzipWithConfig(config GzipConfig) dapi.MiddlewareFunc {
 		config.Level = DefaultGzipConfig.Level
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
 
 			res := c.Response()
-			res.Header().Add(dapi.HeaderVary, dapi.HeaderAcceptEncoding)
-			if strings.Contains(c.Request().Header.Get(dapi.HeaderAcceptEncoding), gzipScheme) {
-				res.Header().Set(dapi.HeaderContentEncoding, gzipScheme) // Issue #806
+			res.Header().Add(nio.HeaderVary, nio.HeaderAcceptEncoding)
+			if strings.Contains(c.Request().Header.Get(nio.HeaderAcceptEncoding), gzipScheme) {
+				res.Header().Set(nio.HeaderContentEncoding, gzipScheme) // Issue #806
 				rw := res.Writer
 				w, err := gzip.NewWriterLevel(rw, config.Level)
 				if err != nil {
@@ -75,8 +75,8 @@ func GzipWithConfig(config GzipConfig) dapi.MiddlewareFunc {
 				}
 				defer func() {
 					if res.Size == 0 {
-						if res.Header().Get(dapi.HeaderContentEncoding) == gzipScheme {
-							res.Header().Del(dapi.HeaderContentEncoding)
+						if res.Header().Get(nio.HeaderContentEncoding) == gzipScheme {
+							res.Header().Del(nio.HeaderContentEncoding)
 						}
 						// We have to reset response to it's pristine state when
 						// nothing is written to body or error is returned.
@@ -96,15 +96,15 @@ func GzipWithConfig(config GzipConfig) dapi.MiddlewareFunc {
 
 func (w *gzipResponseWriter) WriteHeader(code int) {
 	if code == http.StatusNoContent { // Issue #489
-		w.ResponseWriter.Header().Del(dapi.HeaderContentEncoding)
+		w.ResponseWriter.Header().Del(nio.HeaderContentEncoding)
 	}
-	w.Header().Del(dapi.HeaderContentLength) // Issue #444
+	w.Header().Del(nio.HeaderContentLength) // Issue #444
 	w.ResponseWriter.WriteHeader(code)
 }
 
 func (w *gzipResponseWriter) Write(b []byte) (int, error) {
-	if w.Header().Get(dapi.HeaderContentType) == "" {
-		w.Header().Set(dapi.HeaderContentType, http.DetectContentType(b))
+	if w.Header().Get(nio.HeaderContentType) == "" {
+		w.Header().Set(nio.HeaderContentType, http.DetectContentType(b))
 	}
 	return w.Writer.Write(b)
 }

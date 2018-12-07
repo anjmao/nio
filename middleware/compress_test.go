@@ -8,18 +8,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGzip(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
 	// Skip if no Accept-Encoding header
-	h := Gzip()(func(c dapi.Context) error {
+	h := Gzip()(func(c nio.Context) error {
 		c.Response().Write([]byte("test")) // For Content-Type sniffing
 		return nil
 	})
@@ -31,12 +31,12 @@ func TestGzip(t *testing.T) {
 
 	// Gzip
 	req = httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set(dapi.HeaderAcceptEncoding, gzipScheme)
+	req.Header.Set(nio.HeaderAcceptEncoding, gzipScheme)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	h(c)
-	assert.Equal(gzipScheme, rec.Header().Get(dapi.HeaderContentEncoding))
-	assert.Contains(rec.Header().Get(dapi.HeaderContentType), dapi.MIMETextPlain)
+	assert.Equal(gzipScheme, rec.Header().Get(nio.HeaderContentEncoding))
+	assert.Contains(rec.Header().Get(nio.HeaderContentType), nio.MIMETextPlain)
 	r, err := gzip.NewReader(rec.Body)
 	if assert.NoError(err) {
 		buf := new(bytes.Buffer)
@@ -47,42 +47,42 @@ func TestGzip(t *testing.T) {
 }
 
 func TestGzipNoContent(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set(dapi.HeaderAcceptEncoding, gzipScheme)
+	req.Header.Set(nio.HeaderAcceptEncoding, gzipScheme)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	h := Gzip()(func(c dapi.Context) error {
+	h := Gzip()(func(c nio.Context) error {
 		return c.NoContent(http.StatusNoContent)
 	})
 	if assert.NoError(t, h(c)) {
-		assert.Empty(t, rec.Header().Get(dapi.HeaderContentEncoding))
-		assert.Empty(t, rec.Header().Get(dapi.HeaderContentType))
+		assert.Empty(t, rec.Header().Get(nio.HeaderContentEncoding))
+		assert.Empty(t, rec.Header().Get(nio.HeaderContentType))
 		assert.Equal(t, 0, len(rec.Body.Bytes()))
 	}
 }
 
 func TestGzipErrorReturned(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	e.Use(Gzip())
-	e.GET("/", func(c dapi.Context) error {
-		return dapi.ErrNotFound
+	e.GET("/", func(c nio.Context) error {
+		return nio.ErrNotFound
 	})
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set(dapi.HeaderAcceptEncoding, gzipScheme)
+	req.Header.Set(nio.HeaderAcceptEncoding, gzipScheme)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
-	assert.Empty(t, rec.Header().Get(dapi.HeaderContentEncoding))
+	assert.Empty(t, rec.Header().Get(nio.HeaderContentEncoding))
 }
 
 // Issue #806
 func TestGzipWithStatic(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	e.Use(Gzip())
 	e.Static("/test", "../_fixture/images")
 	req := httptest.NewRequest(http.MethodGet, "/test/walle.png", nil)
-	req.Header.Set(dapi.HeaderAcceptEncoding, gzipScheme)
+	req.Header.Set(nio.HeaderAcceptEncoding, gzipScheme)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusOK, rec.Code)

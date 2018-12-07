@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,8 +22,8 @@ type jwtCustomClaims struct {
 }
 
 func TestJWTRace(t *testing.T) {
-	e := dapi.New()
-	handler := func(c dapi.Context) error {
+	e := nio.New()
+	handler := func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	}
 	initialToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
@@ -35,10 +35,10 @@ func TestJWTRace(t *testing.T) {
 		SigningKey: validKey,
 	})(handler)
 
-	makeReq := func(token string) dapi.Context {
+	makeReq := func(token string) nio.Context {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		res := httptest.NewRecorder()
-		req.Header.Set(dapi.HeaderAuthorization, DefaultJWTConfig.AuthScheme+" "+token)
+		req.Header.Set(nio.HeaderAuthorization, DefaultJWTConfig.AuthScheme+" "+token)
 		c := e.NewContext(req, res)
 		assert.NoError(t, h(c))
 		return c
@@ -58,8 +58,8 @@ func TestJWTRace(t *testing.T) {
 }
 
 func TestJWT(t *testing.T) {
-	e := dapi.New()
-	handler := func(c dapi.Context) error {
+	e := nio.New()
+	handler := func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	}
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
@@ -190,8 +190,8 @@ func TestJWT(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodGet, tc.reqURL, nil)
 		res := httptest.NewRecorder()
-		req.Header.Set(dapi.HeaderAuthorization, tc.hdrAuth)
-		req.Header.Set(dapi.HeaderCookie, tc.hdrCookie)
+		req.Header.Set(nio.HeaderAuthorization, tc.hdrAuth)
+		req.Header.Set(nio.HeaderCookie, tc.hdrCookie)
 		c := e.NewContext(req, res)
 
 		if tc.expPanic {
@@ -203,7 +203,7 @@ func TestJWT(t *testing.T) {
 
 		if tc.expErrCode != 0 {
 			h := JWTWithConfig(tc.config)(handler)
-			he := h(c).(*dapi.HTTPError)
+			he := h(c).(*nio.HTTPError)
 			assert.Equal(t, tc.expErrCode, he.Code, tc.info)
 			continue
 		}

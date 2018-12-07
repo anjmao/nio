@@ -1,4 +1,4 @@
-package dapi
+package nio
 
 import (
 	"fmt"
@@ -504,7 +504,7 @@ var (
 func TestRouterStatic(t *testing.T) {
 	e := New()
 	r := e.router
-	path := "/folders/a/files/dapi.gif"
+	path := "/folders/a/files/nio.gif"
 	r.Add(http.MethodGet, path, func(c Context) error {
 		c.Set("path", path)
 		return nil

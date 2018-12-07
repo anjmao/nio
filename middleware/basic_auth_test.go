@@ -7,22 +7,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBasicAuth(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
-	f := func(u, p string, c dapi.Context) (bool, error) {
+	f := func(u, p string, c nio.Context) (bool, error) {
 		if u == "joe" && p == "secret" {
 			return true, nil
 		}
 		return false, nil
 	}
-	h := BasicAuth(f)(func(c dapi.Context) error {
+	h := BasicAuth(f)(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 
@@ -30,42 +30,42 @@ func TestBasicAuth(t *testing.T) {
 
 	// Valid credentials
 	auth := basic + " " + base64.StdEncoding.EncodeToString([]byte("joe:secret"))
-	req.Header.Set(dapi.HeaderAuthorization, auth)
+	req.Header.Set(nio.HeaderAuthorization, auth)
 	assert.NoError(h(c))
 
 	h = BasicAuthWithConfig(BasicAuthConfig{
 		Skipper:   nil,
 		Validator: f,
 		Realm:     "someRealm",
-	})(func(c dapi.Context) error {
+	})(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 
 	// Valid credentials
 	auth = basic + " " + base64.StdEncoding.EncodeToString([]byte("joe:secret"))
-	req.Header.Set(dapi.HeaderAuthorization, auth)
+	req.Header.Set(nio.HeaderAuthorization, auth)
 	assert.NoError(h(c))
 
 	// Case-insensitive header scheme
 	auth = strings.ToUpper(basic) + " " + base64.StdEncoding.EncodeToString([]byte("joe:secret"))
-	req.Header.Set(dapi.HeaderAuthorization, auth)
+	req.Header.Set(nio.HeaderAuthorization, auth)
 	assert.NoError(h(c))
 
 	// Invalid credentials
 	auth = basic + " " + base64.StdEncoding.EncodeToString([]byte("joe:invalid-password"))
-	req.Header.Set(dapi.HeaderAuthorization, auth)
-	he := h(c).(*dapi.HTTPError)
+	req.Header.Set(nio.HeaderAuthorization, auth)
+	he := h(c).(*nio.HTTPError)
 	assert.Equal(http.StatusUnauthorized, he.Code)
-	assert.Equal(basic+` realm="someRealm"`, res.Header().Get(dapi.HeaderWWWAuthenticate))
+	assert.Equal(basic+` realm="someRealm"`, res.Header().Get(nio.HeaderWWWAuthenticate))
 
 	// Missing Authorization header
-	req.Header.Del(dapi.HeaderAuthorization)
-	he = h(c).(*dapi.HTTPError)
+	req.Header.Del(nio.HeaderAuthorization)
+	he = h(c).(*nio.HTTPError)
 	assert.Equal(http.StatusUnauthorized, he.Code)
 
 	// Invalid Authorization header
 	auth = base64.StdEncoding.EncodeToString([]byte("invalid"))
-	req.Header.Set(dapi.HeaderAuthorization, auth)
-	he = h(c).(*dapi.HTTPError)
+	req.Header.Set(nio.HeaderAuthorization, auth)
+	he = h(c).(*nio.HTTPError)
 	assert.Equal(http.StatusUnauthorized, he.Code)
 }

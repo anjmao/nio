@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -70,20 +70,20 @@ var (
 // Secure middleware provides protection against cross-site scripting (XSS) attack,
 // content type sniffing, clickjacking, insecure connection and other code injection
 // attacks.
-func Secure() dapi.MiddlewareFunc {
+func Secure() nio.MiddlewareFunc {
 	return SecureWithConfig(DefaultSecureConfig)
 }
 
 // SecureWithConfig returns a Secure middleware with config.
 // See: `Secure()`.
-func SecureWithConfig(config SecureConfig) dapi.MiddlewareFunc {
+func SecureWithConfig(config SecureConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultSecureConfig.Skipper
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -92,23 +92,23 @@ func SecureWithConfig(config SecureConfig) dapi.MiddlewareFunc {
 			res := c.Response()
 
 			if config.XSSProtection != "" {
-				res.Header().Set(dapi.HeaderXXSSProtection, config.XSSProtection)
+				res.Header().Set(nio.HeaderXXSSProtection, config.XSSProtection)
 			}
 			if config.ContentTypeNosniff != "" {
-				res.Header().Set(dapi.HeaderXContentTypeOptions, config.ContentTypeNosniff)
+				res.Header().Set(nio.HeaderXContentTypeOptions, config.ContentTypeNosniff)
 			}
 			if config.XFrameOptions != "" {
-				res.Header().Set(dapi.HeaderXFrameOptions, config.XFrameOptions)
+				res.Header().Set(nio.HeaderXFrameOptions, config.XFrameOptions)
 			}
-			if (c.IsTLS() || (req.Header.Get(dapi.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
+			if (c.IsTLS() || (req.Header.Get(nio.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
 				subdomains := ""
 				if !config.HSTSExcludeSubdomains {
 					subdomains = "; includeSubdomains"
 				}
-				res.Header().Set(dapi.HeaderStrictTransportSecurity, fmt.Sprintf("max-age=%d%s", config.HSTSMaxAge, subdomains))
+				res.Header().Set(nio.HeaderStrictTransportSecurity, fmt.Sprintf("max-age=%d%s", config.HSTSMaxAge, subdomains))
 			}
 			if config.ContentSecurityPolicy != "" {
-				res.Header().Set(dapi.HeaderContentSecurityPolicy, config.ContentSecurityPolicy)
+				res.Header().Set(nio.HeaderContentSecurityPolicy, config.ContentSecurityPolicy)
 			}
 			return next(c)
 		}

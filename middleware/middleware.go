@@ -5,16 +5,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
 	// Skipper defines a function to skip middleware. Returning true skips processing
 	// the middleware.
-	Skipper func(dapi.Context) bool
+	Skipper func(nio.Context) bool
 
 	// BeforeFunc defines a function which is executed just before the middleware.
-	BeforeFunc func(dapi.Context)
+	BeforeFunc func(nio.Context)
 )
 
 func captureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
@@ -33,6 +33,6 @@ func captureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
 }
 
 // DefaultSkipper returns false which processes the middleware.
-func DefaultSkipper(dapi.Context) bool {
+func DefaultSkipper(nio.Context) bool {
 	return false
 }

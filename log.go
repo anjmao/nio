@@ -1,9 +1,9 @@
-package dapi
+package nio
 
 import (
 	"io"
 
-	"github.com/dostack/dapi/internal/log"
+	"github.com/dostack/nio/internal/log"
 )
 
 type (

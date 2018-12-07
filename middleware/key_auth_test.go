@@ -7,21 +7,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestKeyAuth(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	config := KeyAuthConfig{
-		Validator: func(key string, c dapi.Context) (bool, error) {
+		Validator: func(key string, c nio.Context) (bool, error) {
 			return key == "valid-key", nil
 		},
 	}
-	h := KeyAuthWithConfig(config)(func(c dapi.Context) error {
+	h := KeyAuthWithConfig(config)(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 
@@ -29,23 +29,23 @@ func TestKeyAuth(t *testing.T) {
 
 	// Valid key
 	auth := DefaultKeyAuthConfig.AuthScheme + " " + "valid-key"
-	req.Header.Set(dapi.HeaderAuthorization, auth)
+	req.Header.Set(nio.HeaderAuthorization, auth)
 	assert.NoError(h(c))
 
 	// Invalid key
 	auth = DefaultKeyAuthConfig.AuthScheme + " " + "invalid-key"
-	req.Header.Set(dapi.HeaderAuthorization, auth)
-	he := h(c).(*dapi.HTTPError)
+	req.Header.Set(nio.HeaderAuthorization, auth)
+	he := h(c).(*nio.HTTPError)
 	assert.Equal(http.StatusUnauthorized, he.Code)
 
 	// Missing Authorization header
-	req.Header.Del(dapi.HeaderAuthorization)
-	he = h(c).(*dapi.HTTPError)
+	req.Header.Del(nio.HeaderAuthorization)
+	he = h(c).(*nio.HTTPError)
 	assert.Equal(http.StatusBadRequest, he.Code)
 
 	// Key from custom header
 	config.KeyLookup = "header:API-Key"
-	h = KeyAuthWithConfig(config)(func(c dapi.Context) error {
+	h = KeyAuthWithConfig(config)(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 	req.Header.Set("API-Key", "valid-key")
@@ -53,7 +53,7 @@ func TestKeyAuth(t *testing.T) {
 
 	// Key from query string
 	config.KeyLookup = "query:key"
-	h = KeyAuthWithConfig(config)(func(c dapi.Context) error {
+	h = KeyAuthWithConfig(config)(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 	q := req.URL.Query()
@@ -63,13 +63,13 @@ func TestKeyAuth(t *testing.T) {
 
 	// Key from form
 	config.KeyLookup = "form:key"
-	h = KeyAuthWithConfig(config)(func(c dapi.Context) error {
+	h = KeyAuthWithConfig(config)(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 	f := make(url.Values)
 	f.Set("key", "valid-key")
 	req = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(f.Encode()))
-	req.Header.Set(dapi.HeaderContentType, dapi.MIMEApplicationForm)
+	req.Header.Set(nio.HeaderContentType, nio.MIMEApplicationForm)
 	c = e.NewContext(req, rec)
 	assert.NoError(h(c))
 }

@@ -8,7 +8,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -23,7 +23,7 @@ type (
 	}
 
 	// BodyDumpHandler receives the request and response payload.
-	BodyDumpHandler func(dapi.Context, []byte, []byte)
+	BodyDumpHandler func(nio.Context, []byte, []byte)
 
 	bodyDumpResponseWriter struct {
 		io.Writer
@@ -42,7 +42,7 @@ var (
 //
 // BodyLimit middleware captures the request and response payload and calls the
 // registered handler.
-func BodyDump(handler BodyDumpHandler) dapi.MiddlewareFunc {
+func BodyDump(handler BodyDumpHandler) nio.MiddlewareFunc {
 	c := DefaultBodyDumpConfig
 	c.Handler = handler
 	return BodyDumpWithConfig(c)
@@ -50,17 +50,17 @@ func BodyDump(handler BodyDumpHandler) dapi.MiddlewareFunc {
 
 // BodyDumpWithConfig returns a BodyDump middleware with config.
 // See: `BodyDump()`.
-func BodyDumpWithConfig(config BodyDumpConfig) dapi.MiddlewareFunc {
+func BodyDumpWithConfig(config BodyDumpConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Handler == nil {
-		panic("dapi: body-dump middleware requires a handler function")
+		panic("nio: body-dump middleware requires a handler function")
 	}
 	if config.Skipper == nil {
 		config.Skipper = DefaultBodyDumpConfig.Skipper
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) (err error) {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) (err error) {
 			if config.Skipper(c) {
 				return next(c)
 			}

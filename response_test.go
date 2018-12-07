@@ -1,4 +1,4 @@
-package dapi
+package nio
 
 import (
 	"net/http"
@@ -13,12 +13,12 @@ func TestResponse(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	res := &Response{dapi: e, Writer: rec}
+	res := &Response{nio: e, Writer: rec}
 
 	// Before
 	res.Before(func() {
-		c.Response().Header().Set(HeaderServer, "dapi")
+		c.Response().Header().Set(HeaderServer, "nio")
 	})
 	res.Write([]byte("test"))
-	assert.Equal(t, "dapi", rec.Header().Get(HeaderServer))
+	assert.Equal(t, "nio", rec.Header().Get(HeaderServer))
 }

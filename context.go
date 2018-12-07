@@ -1,4 +1,4 @@
-package dapi
+package nio
 
 import (
 	"bytes"
@@ -103,11 +103,11 @@ type (
 		Bind(i interface{}) error
 
 		// Validate validates provided `i`. It is usually called after `Context#Bind()`.
-		// Validator must be registered using `Dapi#Validator`.
+		// Validator must be registered using `Nio#Validator`.
 		Validate(i interface{}) error
 
 		// Render renders a template with data and sends a text/html response with status
-		// code. Renderer must be registered using `dapi.Renderer`.
+		// code. Renderer must be registered using `nio.Renderer`.
 		Render(code int, name string, data interface{}) error
 
 		// HTML sends an HTTP response with status code.
@@ -179,12 +179,12 @@ type (
 		// Logger returns the `Logger` instance.
 		Logger() Logger
 
-		// Dapi returns the `Dapi` instance.
-		Dapi() *Dapi
+		// Nio returns the `Nio` instance.
+		Nio() *Nio
 
 		// Reset resets the context after request completes. It must be called along
-		// with `Dapi#AcquireContext()` and `Dapi#ReleaseContext()`.
-		// See `Dapi#ServeHTTP()`
+		// with `Nio#AcquireContext()` and `Nio#ReleaseContext()`.
+		// See `Nio#ServeHTTP()`
 		Reset(r *http.Request, w http.ResponseWriter)
 	}
 
@@ -197,7 +197,7 @@ type (
 		query    url.Values
 		handler  HandlerFunc
 		store    Map
-		dapi     *Dapi
+		nio     *Nio
 	}
 )
 
@@ -370,22 +370,22 @@ func (c *context) Set(key string, val interface{}) {
 }
 
 func (c *context) Bind(i interface{}) error {
-	return c.dapi.Binder.Bind(i, c)
+	return c.nio.Binder.Bind(i, c)
 }
 
 func (c *context) Validate(i interface{}) error {
-	if c.dapi.Validator == nil {
+	if c.nio.Validator == nil {
 		return ErrValidatorNotRegistered
 	}
-	return c.dapi.Validator.Validate(i)
+	return c.nio.Validator.Validate(i)
 }
 
 func (c *context) Render(code int, name string, data interface{}) (err error) {
-	if c.dapi.Renderer == nil {
+	if c.nio.Renderer == nil {
 		return ErrRendererNotRegistered
 	}
 	buf := new(bytes.Buffer)
-	if err = c.dapi.Renderer.Render(buf, name, data, c); err != nil {
+	if err = c.nio.Renderer.Render(buf, name, data, c); err != nil {
 		return
 	}
 	return c.HTMLBlob(code, buf.Bytes())
@@ -405,7 +405,7 @@ func (c *context) String(code int, s string) (err error) {
 
 func (c *context) JSON(code int, i interface{}) (err error) {
 	_, pretty := c.QueryParams()["pretty"]
-	if c.dapi.Debug || pretty {
+	if c.nio.Debug || pretty {
 		return c.JSONPretty(code, i, "  ")
 	}
 	b, err := json.Marshal(i)
@@ -450,7 +450,7 @@ func (c *context) JSONPBlob(code int, callback string, b []byte) (err error) {
 
 func (c *context) XML(code int, i interface{}) (err error) {
 	_, pretty := c.QueryParams()["pretty"]
-	if c.dapi.Debug || pretty {
+	if c.nio.Debug || pretty {
 		return c.XMLPretty(code, i, "  ")
 	}
 	b, err := xml.Marshal(i)
@@ -543,11 +543,11 @@ func (c *context) Redirect(code int, url string) error {
 }
 
 func (c *context) Error(err error) {
-	c.dapi.HTTPErrorHandler(err, c)
+	c.nio.HTTPErrorHandler(err, c)
 }
 
-func (c *context) Dapi() *Dapi {
-	return c.dapi
+func (c *context) Nio() *Nio {
+	return c.nio
 }
 
 func (c *context) Handler() HandlerFunc {
@@ -559,7 +559,7 @@ func (c *context) SetHandler(h HandlerFunc) {
 }
 
 func (c *context) Logger() Logger {
-	return c.dapi.Logger
+	return c.nio.Logger
 }
 
 func (c *context) Reset(r *http.Request, w http.ResponseWriter) {
@@ -570,6 +570,6 @@ func (c *context) Reset(r *http.Request, w http.ResponseWriter) {
 	c.store = nil
 	c.path = ""
 	c.pnames = nil
-	// NOTE: Don't reset because it has to have length c.dapi.maxParam at all times
+	// NOTE: Don't reset because it has to have length c.nio.maxParam at all times
 	// c.pvalues = nil
 }

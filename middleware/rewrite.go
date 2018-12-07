@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -37,7 +37,7 @@ var (
 // Rewrite returns a Rewrite middleware.
 //
 // Rewrite middleware rewrites the URL path based on the provided rules.
-func Rewrite(rules map[string]string) dapi.MiddlewareFunc {
+func Rewrite(rules map[string]string) nio.MiddlewareFunc {
 	c := DefaultRewriteConfig
 	c.Rules = rules
 	return RewriteWithConfig(c)
@@ -45,10 +45,10 @@ func Rewrite(rules map[string]string) dapi.MiddlewareFunc {
 
 // RewriteWithConfig returns a Rewrite middleware with config.
 // See: `Rewrite()`.
-func RewriteWithConfig(config RewriteConfig) dapi.MiddlewareFunc {
+func RewriteWithConfig(config RewriteConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Rules == nil {
-		panic("dapi: rewrite middleware requires url path rewrite rules")
+		panic("nio: rewrite middleware requires url path rewrite rules")
 	}
 	if config.Skipper == nil {
 		config.Skipper = DefaultBodyDumpConfig.Skipper
@@ -62,8 +62,8 @@ func RewriteWithConfig(config RewriteConfig) dapi.MiddlewareFunc {
 		config.rulesRegex[regexp.MustCompile(k)] = v
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) (err error) {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) (err error) {
 			if config.Skipper(c) {
 				return next(c)
 			}

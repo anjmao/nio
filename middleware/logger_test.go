@@ -12,17 +12,17 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLogger(t *testing.T) {
 	// Note: Just for the test coverage, not a real test.
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	h := Logger()(func(c dapi.Context) error {
+	h := Logger()(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 
@@ -32,7 +32,7 @@ func TestLogger(t *testing.T) {
 	// Status 3xx
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	h = Logger()(func(c dapi.Context) error {
+	h = Logger()(func(c nio.Context) error {
 		return c.String(http.StatusTemporaryRedirect, "test")
 	})
 	h(c)
@@ -40,7 +40,7 @@ func TestLogger(t *testing.T) {
 	// Status 4xx
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	h = Logger()(func(c dapi.Context) error {
+	h = Logger()(func(c nio.Context) error {
 		return c.String(http.StatusNotFound, "test")
 	})
 	h(c)
@@ -49,33 +49,33 @@ func TestLogger(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/", nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	h = Logger()(func(c dapi.Context) error {
+	h = Logger()(func(c nio.Context) error {
 		return errors.New("error")
 	})
 	h(c)
 }
 
 func TestLoggerIPAddress(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	buf := new(bytes.Buffer)
 	e.Logger.SetOutput(buf)
 	ip := "127.0.0.1"
-	h := Logger()(func(c dapi.Context) error {
+	h := Logger()(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 
 	// With X-Real-IP
-	req.Header.Add(dapi.HeaderXRealIP, ip)
+	req.Header.Add(nio.HeaderXRealIP, ip)
 	h(c)
 	assert.Contains(t, ip, buf.String())
 
 	// With X-Forwarded-For
 	buf.Reset()
-	req.Header.Del(dapi.HeaderXRealIP)
-	req.Header.Add(dapi.HeaderXForwardedFor, ip)
+	req.Header.Del(nio.HeaderXRealIP)
+	req.Header.Add(nio.HeaderXForwardedFor, ip)
 	h(c)
 	assert.Contains(t, ip, buf.String())
 
@@ -87,7 +87,7 @@ func TestLoggerIPAddress(t *testing.T) {
 func TestLoggerTemplate(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	e := dapi.New()
+	e := nio.New()
 	e.Use(LoggerWithConfig(LoggerConfig{
 		Format: `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}","host":"${host}","user_agent":"${user_agent}",` +
 			`"method":"${method}","uri":"${uri}","status":${status}, "latency":${latency},` +
@@ -97,15 +97,15 @@ func TestLoggerTemplate(t *testing.T) {
 		Output: buf,
 	}))
 
-	e.GET("/", func(c dapi.Context) error {
+	e.GET("/", func(c nio.Context) error {
 		return c.String(http.StatusOK, "Header Logged")
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/?username=apagano-param&password=secret", nil)
 	req.RequestURI = "/"
-	req.Header.Add(dapi.HeaderXRealIP, "127.0.0.1")
+	req.Header.Add(nio.HeaderXRealIP, "127.0.0.1")
 	req.Header.Add("Referer", "google.com")
-	req.Header.Add("User-Agent", "dapi-tests-agent")
+	req.Header.Add("User-Agent", "nio-tests-agent")
 	req.Header.Add("X-Custom-Header", "AAA-CUSTOM-VALUE")
 	req.Header.Add("X-Request-ID", "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	req.Header.Add("Cookie", "_ga=GA1.2.000000000.0000000000; session=ac08034cd216a647fc2eb62f2bcf7b810")
@@ -131,7 +131,7 @@ func TestLoggerTemplate(t *testing.T) {
 		"\"status\":200":                       true,
 		"\"bytes_in\":0":                       true,
 		"google.com":                           true,
-		"dapi-tests-agent":                     true,
+		"nio-tests-agent":                     true,
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8": true,
 		"ac08034cd216a647fc2eb62f2bcf7b810":    true,
 	}
@@ -144,7 +144,7 @@ func TestLoggerTemplate(t *testing.T) {
 func TestLoggerCustomTimestamp(t *testing.T) {
 	buf := new(bytes.Buffer)
 	customTimeFormat := "2006-01-02 15:04:05.00000"
-	e := dapi.New()
+	e := nio.New()
 	e.Use(LoggerWithConfig(LoggerConfig{
 		Format: `{"time":"${time_custom}","id":"${id}","remote_ip":"${remote_ip}","host":"${host}","user_agent":"${user_agent}",` +
 			`"method":"${method}","uri":"${uri}","status":${status}, "latency":${latency},` +
@@ -155,7 +155,7 @@ func TestLoggerCustomTimestamp(t *testing.T) {
 		Output:           buf,
 	}))
 
-	e.GET("/", func(c dapi.Context) error {
+	e.GET("/", func(c nio.Context) error {
 		return c.String(http.StatusOK, "custom time stamp test")
 	})
 

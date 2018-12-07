@@ -6,18 +6,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRecover(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	buf := new(bytes.Buffer)
 	e.Logger.SetOutput(buf)
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	h := Recover()(dapi.HandlerFunc(func(c dapi.Context) error {
+	h := Recover()(nio.HandlerFunc(func(c nio.Context) error {
 		panic("test")
 	}))
 	h(c)

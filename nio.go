@@ -1,5 +1,5 @@
 /*
-package dapi implements high performance, minimalist Go web framework.
+package nio implements high performance, minimalist Go web framework.
 
 Example:
 
@@ -8,18 +8,18 @@ Example:
   import (
     "net/http"
 
-    "github.com/dostack/dapi"
-    "github.com/dostack/dapi/middleware"
+    "github.com/dostack/nio"
+    "github.com/dostack/nio/middleware"
   )
 
   // Handler
-  func hello(c dapi.Context) error {
+  func hello(c nio.Context) error {
     return c.String(http.StatusOK, "Hello, World!")
   }
 
   func main() {
-    // Dapi instance
-    e := dapi.New()
+    // Nio instance
+    e := nio.New()
 
     // Middleware
     e.Use(middleware.Logger())
@@ -32,9 +32,9 @@ Example:
     e.Logger.Fatal(e.Start(":1323"))
   }
 
-Learn more at https://dapi.dostack.com
+Learn more at https://nio.dostack.com
 */
-package dapi
+package nio
 
 import (
 	"bytes"
@@ -54,12 +54,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dostack/dapi/internal/log"
+	"github.com/dostack/nio/internal/log"
 )
 
 type (
-	// Dapi is the top-level framework instance.
-	Dapi struct {
+	// Nio is the top-level framework instance.
+	Nio struct {
 		StdLogger        *stdLog.Logger
 		premiddleware    []MiddlewareFunc
 		middleware       []MiddlewareFunc
@@ -117,7 +117,7 @@ type (
 	// Map defines a generic map of type `map[string]interface{}`.
 	Map map[string]interface{}
 
-	// i is the interface for Dapi and Group.
+	// i is the interface for Nio and Group.
 	i interface {
 		GET(string, HandlerFunc, ...MiddlewareFunc) *Route
 	}
@@ -215,8 +215,8 @@ const (
 
 const (
 	Version = "3.3.dev"
-	website = "https://dapi.dostack.com"
-	// http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Dapi
+	website = "https://nio.dostack.com"
+	// http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Nio
 	banner = `
    ____    __
   / __/___/ /  ___
@@ -275,12 +275,12 @@ var (
 	}
 )
 
-// New creates an instance of dapi.
-func New() (e *Dapi) {
-	e = &Dapi{
+// New creates an instance of nio.
+func New() (e *Nio) {
+	e = &Nio{
 		Server:    new(http.Server),
 		TLSServer: new(http.Server),
-		Logger:    log.New("dapi"),
+		Logger:    log.New("nio"),
 		maxParam:  new(int),
 	}
 	e.Server.Handler = e
@@ -297,25 +297,25 @@ func New() (e *Dapi) {
 }
 
 // NewContext returns a Context instance.
-func (e *Dapi) NewContext(r *http.Request, w http.ResponseWriter) Context {
+func (e *Nio) NewContext(r *http.Request, w http.ResponseWriter) Context {
 	return &context{
 		request:  r,
 		response: NewResponse(w, e),
 		store:    make(Map),
-		dapi:     e,
+		nio:     e,
 		pvalues:  make([]string, *e.maxParam),
 		handler:  NotFoundHandler,
 	}
 }
 
 // Router returns router.
-func (e *Dapi) Router() *Router {
+func (e *Nio) Router() *Router {
 	return e.router
 }
 
 // DefaultHTTPErrorHandler is the default HTTP error handler. It sends a JSON response
 // with status code.
-func (e *Dapi) DefaultHTTPErrorHandler(err error, c Context) {
+func (e *Nio) DefaultHTTPErrorHandler(err error, c Context) {
 	var (
 		code = http.StatusInternalServerError
 		msg  interface{}
@@ -350,72 +350,72 @@ func (e *Dapi) DefaultHTTPErrorHandler(err error, c Context) {
 }
 
 // Pre adds middleware to the chain which is run before router.
-func (e *Dapi) Pre(middleware ...MiddlewareFunc) {
+func (e *Nio) Pre(middleware ...MiddlewareFunc) {
 	e.premiddleware = append(e.premiddleware, middleware...)
 }
 
 // Use adds middleware to the chain which is run after router.
-func (e *Dapi) Use(middleware ...MiddlewareFunc) {
+func (e *Nio) Use(middleware ...MiddlewareFunc) {
 	e.middleware = append(e.middleware, middleware...)
 }
 
 // CONNECT registers a new CONNECT route for a path with matching handler in the
 // router with optional route-level middleware.
-func (e *Dapi) CONNECT(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) CONNECT(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodConnect, path, h, m...)
 }
 
 // DELETE registers a new DELETE route for a path with matching handler in the router
 // with optional route-level middleware.
-func (e *Dapi) DELETE(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) DELETE(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodDelete, path, h, m...)
 }
 
 // GET registers a new GET route for a path with matching handler in the router
 // with optional route-level middleware.
-func (e *Dapi) GET(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) GET(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodGet, path, h, m...)
 }
 
 // HEAD registers a new HEAD route for a path with matching handler in the
 // router with optional route-level middleware.
-func (e *Dapi) HEAD(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) HEAD(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodHead, path, h, m...)
 }
 
 // OPTIONS registers a new OPTIONS route for a path with matching handler in the
 // router with optional route-level middleware.
-func (e *Dapi) OPTIONS(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) OPTIONS(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodOptions, path, h, m...)
 }
 
 // PATCH registers a new PATCH route for a path with matching handler in the
 // router with optional route-level middleware.
-func (e *Dapi) PATCH(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) PATCH(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodPatch, path, h, m...)
 }
 
 // POST registers a new POST route for a path with matching handler in the
 // router with optional route-level middleware.
-func (e *Dapi) POST(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) POST(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodPost, path, h, m...)
 }
 
 // PUT registers a new PUT route for a path with matching handler in the
 // router with optional route-level middleware.
-func (e *Dapi) PUT(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) PUT(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodPut, path, h, m...)
 }
 
 // TRACE registers a new TRACE route for a path with matching handler in the
 // router with optional route-level middleware.
-func (e *Dapi) TRACE(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
+func (e *Nio) TRACE(path string, h HandlerFunc, m ...MiddlewareFunc) *Route {
 	return e.Add(http.MethodTrace, path, h, m...)
 }
 
 // Any registers a new route for all HTTP methods and path with matching handler
 // in the router with optional route-level middleware.
-func (e *Dapi) Any(path string, handler HandlerFunc, middleware ...MiddlewareFunc) []*Route {
+func (e *Nio) Any(path string, handler HandlerFunc, middleware ...MiddlewareFunc) []*Route {
 	routes := make([]*Route, len(methods))
 	for i, m := range methods {
 		routes[i] = e.Add(m, path, handler, middleware...)
@@ -425,7 +425,7 @@ func (e *Dapi) Any(path string, handler HandlerFunc, middleware ...MiddlewareFun
 
 // Match registers a new route for multiple HTTP methods and path with matching
 // handler in the router with optional route-level middleware.
-func (e *Dapi) Match(methods []string, path string, handler HandlerFunc, middleware ...MiddlewareFunc) []*Route {
+func (e *Nio) Match(methods []string, path string, handler HandlerFunc, middleware ...MiddlewareFunc) []*Route {
 	routes := make([]*Route, len(methods))
 	for i, m := range methods {
 		routes[i] = e.Add(m, path, handler, middleware...)
@@ -435,7 +435,7 @@ func (e *Dapi) Match(methods []string, path string, handler HandlerFunc, middlew
 
 // Static registers a new route with path prefix to serve static files from the
 // provided root directory.
-func (e *Dapi) Static(prefix, root string) *Route {
+func (e *Nio) Static(prefix, root string) *Route {
 	if root == "" {
 		root = "." // For security we want to restrict to CWD.
 	}
@@ -460,7 +460,7 @@ func static(i i, prefix, root string) *Route {
 }
 
 // File registers a new route with path to serve a static file with optional route-level middleware.
-func (e *Dapi) File(path, file string, m ...MiddlewareFunc) *Route {
+func (e *Nio) File(path, file string, m ...MiddlewareFunc) *Route {
 	return e.GET(path, func(c Context) error {
 		return c.File(file)
 	}, m...)
@@ -468,7 +468,7 @@ func (e *Dapi) File(path, file string, m ...MiddlewareFunc) *Route {
 
 // Add registers a new route for an HTTP method and path with matching handler
 // in the router with optional route-level middleware.
-func (e *Dapi) Add(method, path string, handler HandlerFunc, middleware ...MiddlewareFunc) *Route {
+func (e *Nio) Add(method, path string, handler HandlerFunc, middleware ...MiddlewareFunc) *Route {
 	name := handlerName(handler)
 	e.router.Add(method, path, func(c Context) error {
 		h := handler
@@ -488,25 +488,25 @@ func (e *Dapi) Add(method, path string, handler HandlerFunc, middleware ...Middl
 }
 
 // Group creates a new router group with prefix and optional group-level middleware.
-func (e *Dapi) Group(prefix string, m ...MiddlewareFunc) (g *Group) {
-	g = &Group{prefix: prefix, dapi: e}
+func (e *Nio) Group(prefix string, m ...MiddlewareFunc) (g *Group) {
+	g = &Group{prefix: prefix, nio: e}
 	g.Use(m...)
 	return
 }
 
 // URI generates a URI from handler.
-func (e *Dapi) URI(handler HandlerFunc, params ...interface{}) string {
+func (e *Nio) URI(handler HandlerFunc, params ...interface{}) string {
 	name := handlerName(handler)
 	return e.Reverse(name, params...)
 }
 
 // URL is an alias for `URI` function.
-func (e *Dapi) URL(h HandlerFunc, params ...interface{}) string {
+func (e *Nio) URL(h HandlerFunc, params ...interface{}) string {
 	return e.URI(h, params...)
 }
 
 // Reverse generates an URL from route name and provided parameters.
-func (e *Dapi) Reverse(name string, params ...interface{}) string {
+func (e *Nio) Reverse(name string, params ...interface{}) string {
 	uri := new(bytes.Buffer)
 	ln := len(params)
 	n := 0
@@ -530,7 +530,7 @@ func (e *Dapi) Reverse(name string, params ...interface{}) string {
 }
 
 // Routes returns the registered routes.
-func (e *Dapi) Routes() []*Route {
+func (e *Nio) Routes() []*Route {
 	routes := make([]*Route, 0, len(e.router.routes))
 	for _, v := range e.router.routes {
 		routes = append(routes, v)
@@ -540,18 +540,18 @@ func (e *Dapi) Routes() []*Route {
 
 // AcquireContext returns an empty `Context` instance from the pool.
 // You must return the context by calling `ReleaseContext()`.
-func (e *Dapi) AcquireContext() Context {
+func (e *Nio) AcquireContext() Context {
 	return e.pool.Get().(Context)
 }
 
 // ReleaseContext returns the `Context` instance back to the pool.
 // You must call it after `AcquireContext()`.
-func (e *Dapi) ReleaseContext(c Context) {
+func (e *Nio) ReleaseContext(c Context) {
 	e.pool.Put(c)
 }
 
 // ServeHTTP implements `http.Handler` interface, which serves HTTP requests.
-func (e *Dapi) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Acquire context
 	c := e.pool.Get().(*context)
 	c.Reset(r, w)
@@ -588,13 +588,13 @@ func (e *Dapi) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Start starts an HTTP server.
-func (e *Dapi) Start(address string) error {
+func (e *Nio) Start(address string) error {
 	e.Server.Addr = address
 	return e.StartServer(e.Server)
 }
 
 // StartTLS starts an HTTPS server.
-func (e *Dapi) StartTLS(address string, certFile, keyFile string) (err error) {
+func (e *Nio) StartTLS(address string, certFile, keyFile string) (err error) {
 	if certFile == "" || keyFile == "" {
 		return errors.New("invalid tls configuration")
 	}
@@ -608,7 +608,7 @@ func (e *Dapi) StartTLS(address string, certFile, keyFile string) (err error) {
 	return e.startTLS(address)
 }
 
-func (e *Dapi) startTLS(address string) error {
+func (e *Nio) startTLS(address string) error {
 	s := e.TLSServer
 	s.Addr = address
 	if !e.DisableHTTP2 {
@@ -618,7 +618,7 @@ func (e *Dapi) startTLS(address string) error {
 }
 
 // StartServer starts a custom http server.
-func (e *Dapi) StartServer(s *http.Server) (err error) {
+func (e *Nio) StartServer(s *http.Server) (err error) {
 	// Setup
 	s.ErrorLog = e.StdLogger
 	s.Handler = e
@@ -647,7 +647,7 @@ func (e *Dapi) StartServer(s *http.Server) (err error) {
 
 // Close immediately stops the server.
 // It internally calls `http.Server#Close()`.
-func (e *Dapi) Close() error {
+func (e *Nio) Close() error {
 	if err := e.TLSServer.Close(); err != nil {
 		return err
 	}
@@ -656,7 +656,7 @@ func (e *Dapi) Close() error {
 
 // Shutdown stops server the gracefully.
 // It internally calls `http.Server#Shutdown()`.
-func (e *Dapi) Shutdown(ctx stdContext.Context) error {
+func (e *Nio) Shutdown(ctx stdContext.Context) error {
 	if err := e.TLSServer.Shutdown(ctx); err != nil {
 		return err
 	}
@@ -682,7 +682,7 @@ func (he *HTTPError) SetInternal(err error) *HTTPError {
 	return he
 }
 
-// WrapHandler wraps `http.Handler` into `dapi.HandlerFunc`.
+// WrapHandler wraps `http.Handler` into `nio.HandlerFunc`.
 func WrapHandler(h http.Handler) HandlerFunc {
 	return func(c Context) error {
 		h.ServeHTTP(c.Response(), c.Request())
@@ -690,7 +690,7 @@ func WrapHandler(h http.Handler) HandlerFunc {
 	}
 }
 
-// WrapMiddleware wraps `func(http.Handler) http.Handler` into `dapi.MiddlewareFunc`
+// WrapMiddleware wraps `func(http.Handler) http.Handler` into `nio.MiddlewareFunc`
 func WrapMiddleware(m func(http.Handler) http.Handler) MiddlewareFunc {
 	return func(next HandlerFunc) HandlerFunc {
 		return func(c Context) (err error) {
@@ -749,3 +749,4 @@ func newListener(address string) (*tcpKeepAliveListener, error) {
 	}
 	return &tcpKeepAliveListener{l.(*net.TCPListener)}, nil
 }
+

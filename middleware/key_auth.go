@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -33,16 +33,16 @@ type (
 	}
 
 	// KeyAuthValidator defines a function to validate KeyAuth credentials.
-	KeyAuthValidator func(string, dapi.Context) (bool, error)
+	KeyAuthValidator func(string, nio.Context) (bool, error)
 
-	keyExtractor func(dapi.Context) (string, error)
+	keyExtractor func(nio.Context) (string, error)
 )
 
 var (
 	// DefaultKeyAuthConfig is the default KeyAuth middleware config.
 	DefaultKeyAuthConfig = KeyAuthConfig{
 		Skipper:    DefaultSkipper,
-		KeyLookup:  "header:" + dapi.HeaderAuthorization,
+		KeyLookup:  "header:" + nio.HeaderAuthorization,
 		AuthScheme: "Bearer",
 	}
 )
@@ -52,7 +52,7 @@ var (
 // For valid key it calls the next handler.
 // For invalid key, it sends "401 - Unauthorized" response.
 // For missing key, it sends "400 - Bad Request" response.
-func KeyAuth(fn KeyAuthValidator) dapi.MiddlewareFunc {
+func KeyAuth(fn KeyAuthValidator) nio.MiddlewareFunc {
 	c := DefaultKeyAuthConfig
 	c.Validator = fn
 	return KeyAuthWithConfig(c)
@@ -60,7 +60,7 @@ func KeyAuth(fn KeyAuthValidator) dapi.MiddlewareFunc {
 
 // KeyAuthWithConfig returns an KeyAuth middleware with config.
 // See `KeyAuth()`.
-func KeyAuthWithConfig(config KeyAuthConfig) dapi.MiddlewareFunc {
+func KeyAuthWithConfig(config KeyAuthConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultKeyAuthConfig.Skipper
@@ -73,7 +73,7 @@ func KeyAuthWithConfig(config KeyAuthConfig) dapi.MiddlewareFunc {
 		config.KeyLookup = DefaultKeyAuthConfig.KeyLookup
 	}
 	if config.Validator == nil {
-		panic("dapi: key-auth middleware requires a validator function")
+		panic("nio: key-auth middleware requires a validator function")
 	}
 
 	// Initialize
@@ -86,8 +86,8 @@ func KeyAuthWithConfig(config KeyAuthConfig) dapi.MiddlewareFunc {
 		extractor = keyFromForm(parts[1])
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -95,7 +95,7 @@ func KeyAuthWithConfig(config KeyAuthConfig) dapi.MiddlewareFunc {
 			// Extract and verify key
 			key, err := extractor(c)
 			if err != nil {
-				return dapi.NewHTTPError(http.StatusBadRequest, err.Error())
+				return nio.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
 			valid, err := config.Validator(key, c)
 			if err != nil {
@@ -104,19 +104,19 @@ func KeyAuthWithConfig(config KeyAuthConfig) dapi.MiddlewareFunc {
 				return next(c)
 			}
 
-			return dapi.ErrUnauthorized
+			return nio.ErrUnauthorized
 		}
 	}
 }
 
 // keyFromHeader returns a `keyExtractor` that extracts key from the request header.
 func keyFromHeader(header string, authScheme string) keyExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		auth := c.Request().Header.Get(header)
 		if auth == "" {
 			return "", errors.New("missing key in request header")
 		}
-		if header == dapi.HeaderAuthorization {
+		if header == nio.HeaderAuthorization {
 			l := len(authScheme)
 			if len(auth) > l+1 && auth[:l] == authScheme {
 				return auth[l+1:], nil
@@ -129,7 +129,7 @@ func keyFromHeader(header string, authScheme string) keyExtractor {
 
 // keyFromQuery returns a `keyExtractor` that extracts key from the query string.
 func keyFromQuery(param string) keyExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		key := c.QueryParam(param)
 		if key == "" {
 			return "", errors.New("missing key in the query string")
@@ -140,7 +140,7 @@ func keyFromQuery(param string) keyExtractor {
 
 // keyFromForm returns a `keyExtractor` that extracts key from the form.
 func keyFromForm(param string) keyExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		key := c.FormValue(param)
 		if key == "" {
 			return "", errors.New("missing key in the form")

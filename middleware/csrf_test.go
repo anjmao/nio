@@ -7,26 +7,26 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dostack/dapi"
-	"github.com/dostack/dapi/internal/random"
+	"github.com/dostack/nio"
+	"github.com/dostack/nio/internal/random"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCSRF(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	csrf := CSRFWithConfig(CSRFConfig{
 		TokenLength: 16,
 	})
-	h := csrf(func(c dapi.Context) error {
+	h := csrf(func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	})
 
 	// Generate CSRF token
 	h(c)
-	assert.Contains(t, rec.Header().Get(dapi.HeaderSetCookie), "_csrf")
+	assert.Contains(t, rec.Header().Get(nio.HeaderSetCookie), "_csrf")
 
 	// Without CSRF cookie
 	req = httptest.NewRequest(http.MethodPost, "/", nil)
@@ -38,13 +38,13 @@ func TestCSRF(t *testing.T) {
 	req = httptest.NewRequest(http.MethodPost, "/", nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	req.Header.Set(dapi.HeaderXCSRFToken, "")
+	req.Header.Set(nio.HeaderXCSRFToken, "")
 	assert.Error(t, h(c))
 
 	// Valid CSRF token
 	token := random.String(16)
-	req.Header.Set(dapi.HeaderCookie, "_csrf="+token)
-	req.Header.Set(dapi.HeaderXCSRFToken, token)
+	req.Header.Set(nio.HeaderCookie, "_csrf="+token)
+	req.Header.Set(nio.HeaderXCSRFToken, token)
 	if assert.NoError(t, h(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
@@ -53,9 +53,9 @@ func TestCSRF(t *testing.T) {
 func TestCSRFTokenFromForm(t *testing.T) {
 	f := make(url.Values)
 	f.Set("csrf", "token")
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(f.Encode()))
-	req.Header.Add(dapi.HeaderContentType, dapi.MIMEApplicationForm)
+	req.Header.Add(nio.HeaderContentType, nio.MIMEApplicationForm)
 	c := e.NewContext(req, nil)
 	token, err := csrfTokenFromForm("csrf")(c)
 	if assert.NoError(t, err) {
@@ -68,9 +68,9 @@ func TestCSRFTokenFromForm(t *testing.T) {
 func TestCSRFTokenFromQuery(t *testing.T) {
 	q := make(url.Values)
 	q.Set("csrf", "token")
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Add(dapi.HeaderContentType, dapi.MIMEApplicationForm)
+	req.Header.Add(nio.HeaderContentType, nio.MIMEApplicationForm)
 	req.URL.RawQuery = q.Encode()
 	c := e.NewContext(req, nil)
 	token, err := csrfTokenFromQuery("csrf")(c)

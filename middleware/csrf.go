@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dostack/dapi"
-	"github.com/dostack/dapi/internal/random"
+	"github.com/dostack/nio"
+	"github.com/dostack/nio/internal/random"
 )
 
 type (
@@ -59,9 +59,9 @@ type (
 		CookieHTTPOnly bool `yaml:"cookie_http_only"`
 	}
 
-	// csrfTokenExtractor defines a function that takes `dapi.Context` and returns
+	// csrfTokenExtractor defines a function that takes `nio.Context` and returns
 	// either a token or an error.
-	csrfTokenExtractor func(dapi.Context) (string, error)
+	csrfTokenExtractor func(nio.Context) (string, error)
 )
 
 var (
@@ -69,7 +69,7 @@ var (
 	DefaultCSRFConfig = CSRFConfig{
 		Skipper:      DefaultSkipper,
 		TokenLength:  32,
-		TokenLookup:  "header:" + dapi.HeaderXCSRFToken,
+		TokenLookup:  "header:" + nio.HeaderXCSRFToken,
 		ContextKey:   "csrf",
 		CookieName:   "_csrf",
 		CookieMaxAge: 86400,
@@ -78,14 +78,14 @@ var (
 
 // CSRF returns a Cross-Site Request Forgery (CSRF) middleware.
 // See: https://en.wikipedia.org/wiki/Cross-site_request_forgery
-func CSRF() dapi.MiddlewareFunc {
+func CSRF() nio.MiddlewareFunc {
 	c := DefaultCSRFConfig
 	return CSRFWithConfig(c)
 }
 
 // CSRFWithConfig returns a CSRF middleware with config.
 // See `CSRF()`.
-func CSRFWithConfig(config CSRFConfig) dapi.MiddlewareFunc {
+func CSRFWithConfig(config CSRFConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultCSRFConfig.Skipper
@@ -116,8 +116,8 @@ func CSRFWithConfig(config CSRFConfig) dapi.MiddlewareFunc {
 		extractor = csrfTokenFromQuery(parts[1])
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -140,10 +140,10 @@ func CSRFWithConfig(config CSRFConfig) dapi.MiddlewareFunc {
 				// Validate token only for requests which are not defined as 'safe' by RFC7231
 				clientToken, err := extractor(c)
 				if err != nil {
-					return dapi.NewHTTPError(http.StatusBadRequest, err.Error())
+					return nio.NewHTTPError(http.StatusBadRequest, err.Error())
 				}
 				if !validateCSRFToken(token, clientToken) {
-					return dapi.NewHTTPError(http.StatusForbidden, "invalid csrf token")
+					return nio.NewHTTPError(http.StatusForbidden, "invalid csrf token")
 				}
 			}
 
@@ -166,7 +166,7 @@ func CSRFWithConfig(config CSRFConfig) dapi.MiddlewareFunc {
 			c.Set(config.ContextKey, token)
 
 			// Protect clients from caching the response
-			c.Response().Header().Add(dapi.HeaderVary, dapi.HeaderCookie)
+			c.Response().Header().Add(nio.HeaderVary, nio.HeaderCookie)
 
 			return next(c)
 		}
@@ -176,7 +176,7 @@ func CSRFWithConfig(config CSRFConfig) dapi.MiddlewareFunc {
 // csrfTokenFromForm returns a `csrfTokenExtractor` that extracts token from the
 // provided request header.
 func csrfTokenFromHeader(header string) csrfTokenExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		return c.Request().Header.Get(header), nil
 	}
 }
@@ -184,7 +184,7 @@ func csrfTokenFromHeader(header string) csrfTokenExtractor {
 // csrfTokenFromForm returns a `csrfTokenExtractor` that extracts token from the
 // provided form parameter.
 func csrfTokenFromForm(param string) csrfTokenExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		token := c.FormValue(param)
 		if token == "" {
 			return "", errors.New("missing csrf token in the form parameter")
@@ -196,7 +196,7 @@ func csrfTokenFromForm(param string) csrfTokenExtractor {
 // csrfTokenFromQuery returns a `csrfTokenExtractor` that extracts token from the
 // provided query parameter.
 func csrfTokenFromQuery(param string) csrfTokenExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		token := c.QueryParam(param)
 		if token == "" {
 			return "", errors.New("missing csrf token in the query string")

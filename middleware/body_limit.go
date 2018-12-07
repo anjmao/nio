@@ -5,8 +5,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/dostack/dapi"
-	"github.com/dostack/dapi/internal/bytes"
+	"github.com/dostack/nio"
+	"github.com/dostack/nio/internal/bytes"
 )
 
 type (
@@ -25,7 +25,7 @@ type (
 		BodyLimitConfig
 		reader  io.ReadCloser
 		read    int64
-		context dapi.Context
+		context nio.Context
 	}
 )
 
@@ -44,7 +44,7 @@ var (
 // header and actual content read, which makes it super secure.
 // Limit can be specified as `4x` or `4xB`, where x is one of the multiple from K, M,
 // G, T or P.
-func BodyLimit(limit string) dapi.MiddlewareFunc {
+func BodyLimit(limit string) nio.MiddlewareFunc {
 	c := DefaultBodyLimitConfig
 	c.Limit = limit
 	return BodyLimitWithConfig(c)
@@ -52,7 +52,7 @@ func BodyLimit(limit string) dapi.MiddlewareFunc {
 
 // BodyLimitWithConfig returns a BodyLimit middleware with config.
 // See: `BodyLimit()`.
-func BodyLimitWithConfig(config BodyLimitConfig) dapi.MiddlewareFunc {
+func BodyLimitWithConfig(config BodyLimitConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultBodyLimitConfig.Skipper
@@ -60,13 +60,13 @@ func BodyLimitWithConfig(config BodyLimitConfig) dapi.MiddlewareFunc {
 
 	limit, err := bytes.Parse(config.Limit)
 	if err != nil {
-		panic(fmt.Errorf("dapi: invalid body-limit=%s", config.Limit))
+		panic(fmt.Errorf("nio: invalid body-limit=%s", config.Limit))
 	}
 	config.limit = limit
 	pool := limitedReaderPool(config)
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -75,7 +75,7 @@ func BodyLimitWithConfig(config BodyLimitConfig) dapi.MiddlewareFunc {
 
 			// Based on content length
 			if req.ContentLength > config.limit {
-				return dapi.ErrStatusRequestEntityTooLarge
+				return nio.ErrStatusRequestEntityTooLarge
 			}
 
 			// Based on content read
@@ -93,7 +93,7 @@ func (r *limitedReader) Read(b []byte) (n int, err error) {
 	n, err = r.reader.Read(b)
 	r.read += int64(n)
 	if r.read > r.limit {
-		return n, dapi.ErrStatusRequestEntityTooLarge
+		return n, nio.ErrStatusRequestEntityTooLarge
 	}
 	return
 }
@@ -102,7 +102,7 @@ func (r *limitedReader) Close() error {
 	return r.reader.Close()
 }
 
-func (r *limitedReader) Reset(reader io.ReadCloser, context dapi.Context) {
+func (r *limitedReader) Reset(reader io.ReadCloser, context nio.Context) {
 	r.reader = reader
 	r.context = context
 	r.read = 0

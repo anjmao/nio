@@ -5,12 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStatic(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -19,12 +19,12 @@ func TestStatic(t *testing.T) {
 	}
 
 	// Directory
-	h := StaticWithConfig(config)(dapi.NotFoundHandler)
+	h := StaticWithConfig(config)(nio.NotFoundHandler)
 
 	assert := assert.New(t)
 
 	if assert.NoError(h(c)) {
-		assert.Contains(rec.Body.String(), "Dapi")
+		assert.Contains(rec.Body.String(), "Nio")
 	}
 
 	// File found
@@ -33,14 +33,14 @@ func TestStatic(t *testing.T) {
 	c = e.NewContext(req, rec)
 	if assert.NoError(h(c)) {
 		assert.Equal(http.StatusOK, rec.Code)
-		assert.Equal(rec.Header().Get(dapi.HeaderContentLength), "219885")
+		assert.Equal(rec.Header().Get(nio.HeaderContentLength), "219885")
 	}
 
 	// File not found
 	req = httptest.NewRequest(http.MethodGet, "/none", nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	he := h(c).(*dapi.HTTPError)
+	he := h(c).(*nio.HTTPError)
 	assert.Equal(http.StatusNotFound, he.Code)
 
 	// HTML5
@@ -49,10 +49,10 @@ func TestStatic(t *testing.T) {
 	c = e.NewContext(req, rec)
 	config.HTML5 = true
 	static := StaticWithConfig(config)
-	h = static(dapi.NotFoundHandler)
+	h = static(nio.NotFoundHandler)
 	if assert.NoError(h(c)) {
 		assert.Equal(http.StatusOK, rec.Code)
-		assert.Contains(rec.Body.String(), "Dapi")
+		assert.Contains(rec.Body.String(), "Nio")
 	}
 
 	// Browse
@@ -62,7 +62,7 @@ func TestStatic(t *testing.T) {
 	config.Root = "../_fixture/certs"
 	config.Browse = true
 	static = StaticWithConfig(config)
-	h = static(dapi.NotFoundHandler)
+	h = static(nio.NotFoundHandler)
 	if assert.NoError(h(c)) {
 		assert.Equal(http.StatusOK, rec.Code)
 		assert.Contains(rec.Body.String(), "cert.pem")

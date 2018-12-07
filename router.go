@@ -1,14 +1,14 @@
-package dapi
+package nio
 
 import "net/http"
 
 type (
-	// Router is the registry of all registered routes for an `Dapi` instance for
+	// Router is the registry of all registered routes for an `Nio` instance for
 	// request matching and URL path parameter parsing.
 	Router struct {
 		tree   *node
 		routes map[string]*Route
-		dapi   *Dapi
+		nio   *Nio
 	}
 	node struct {
 		kind          kind
@@ -43,13 +43,13 @@ const (
 )
 
 // NewRouter returns a new Router instance.
-func NewRouter(e *Dapi) *Router {
+func NewRouter(e *Nio) *Router {
 	return &Router{
 		tree: &node{
 			methodHandler: new(methodHandler),
 		},
 		routes: map[string]*Route{},
-		dapi:   e,
+		nio:   e,
 	}
 }
 
@@ -57,7 +57,7 @@ func NewRouter(e *Dapi) *Router {
 func (r *Router) Add(method, path string, h HandlerFunc) {
 	// Validate path
 	if path == "" {
-		panic("dapi: path cannot be empty")
+		panic("nio: path cannot be empty")
 	}
 	if path[0] != '/' {
 		path = "/" + path
@@ -96,13 +96,13 @@ func (r *Router) Add(method, path string, h HandlerFunc) {
 func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string, pnames []string) {
 	// Adjust max param
 	l := len(pnames)
-	if *r.dapi.maxParam < l {
-		*r.dapi.maxParam = l
+	if *r.nio.maxParam < l {
+		*r.nio.maxParam = l
 	}
 
 	cn := r.tree // Current node as root
 	if cn == nil {
-		panic("dapi: invalid method")
+		panic("nio: invalid method")
 	}
 	search := path
 
@@ -292,9 +292,9 @@ func (n *node) checkMethodNotAllowed() HandlerFunc {
 //
 // For performance:
 //
-// - Get context from `Dapi#AcquireContext()`
+// - Get context from `Nio#AcquireContext()`
 // - Reset it `Context#Reset()`
-// - Return it `Dapi#ReleaseContext()`.
+// - Return it `Nio#ReleaseContext()`.
 func (r *Router) Find(method, path string, c Context) {
 	ctx := c.(*context)
 	ctx.path = path

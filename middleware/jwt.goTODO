@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -58,12 +58,12 @@ type (
 	}
 
 	// JWTSuccessHandler defines a function which is executed for a valid token.
-	JWTSuccessHandler func(dapi.Context)
+	JWTSuccessHandler func(nio.Context)
 
 	// JWTErrorHandler defines a function which is executed for an invalid token.
 	JWTErrorHandler func(error) error
 
-	jwtExtractor func(dapi.Context) (string, error)
+	jwtExtractor func(nio.Context) (string, error)
 )
 
 // Algorithms
@@ -73,7 +73,7 @@ const (
 
 // Errors
 var (
-	ErrJWTMissing = dapi.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
+	ErrJWTMissing = nio.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
 )
 
 var (
@@ -82,7 +82,7 @@ var (
 		Skipper:       DefaultSkipper,
 		SigningMethod: AlgorithmHS256,
 		ContextKey:    "user",
-		TokenLookup:   "header:" + dapi.HeaderAuthorization,
+		TokenLookup:   "header:" + nio.HeaderAuthorization,
 		AuthScheme:    "Bearer",
 		Claims:        jwt.MapClaims{},
 	}
@@ -96,7 +96,7 @@ var (
 //
 // See: https://jwt.io/introduction
 // See `JWTConfig.TokenLookup`
-func JWT(key interface{}) dapi.MiddlewareFunc {
+func JWT(key interface{}) nio.MiddlewareFunc {
 	c := DefaultJWTConfig
 	c.SigningKey = key
 	return JWTWithConfig(c)
@@ -104,13 +104,13 @@ func JWT(key interface{}) dapi.MiddlewareFunc {
 
 // JWTWithConfig returns a JWT auth middleware with config.
 // See: `JWT()`.
-func JWTWithConfig(config JWTConfig) dapi.MiddlewareFunc {
+func JWTWithConfig(config JWTConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultJWTConfig.Skipper
 	}
 	if config.SigningKey == nil {
-		panic("dapi: jwt middleware requires signing key")
+		panic("nio: jwt middleware requires signing key")
 	}
 	if config.SigningMethod == "" {
 		config.SigningMethod = DefaultJWTConfig.SigningMethod
@@ -145,8 +145,8 @@ func JWTWithConfig(config JWTConfig) dapi.MiddlewareFunc {
 		extractor = jwtFromCookie(parts[1])
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -182,7 +182,7 @@ func JWTWithConfig(config JWTConfig) dapi.MiddlewareFunc {
 			if config.ErrorHandler != nil {
 				return config.ErrorHandler(err)
 			}
-			return &dapi.HTTPError{
+			return &nio.HTTPError{
 				Code:     http.StatusUnauthorized,
 				Message:  "invalid or expired jwt",
 				Internal: err,
@@ -193,7 +193,7 @@ func JWTWithConfig(config JWTConfig) dapi.MiddlewareFunc {
 
 // jwtFromHeader returns a `jwtExtractor` that extracts token from the request header.
 func jwtFromHeader(header string, authScheme string) jwtExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		auth := c.Request().Header.Get(header)
 		l := len(authScheme)
 		if len(auth) > l+1 && auth[:l] == authScheme {
@@ -205,7 +205,7 @@ func jwtFromHeader(header string, authScheme string) jwtExtractor {
 
 // jwtFromQuery returns a `jwtExtractor` that extracts token from the query string.
 func jwtFromQuery(param string) jwtExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		token := c.QueryParam(param)
 		if token == "" {
 			return "", ErrJWTMissing
@@ -216,7 +216,7 @@ func jwtFromQuery(param string) jwtExtractor {
 
 // jwtFromCookie returns a `jwtExtractor` that extracts token from the named cookie.
 func jwtFromCookie(name string) jwtExtractor {
-	return func(c dapi.Context) (string, error) {
+	return func(c nio.Context) (string, error) {
 		cookie, err := c.Cookie(name)
 		if err != nil {
 			return "", ErrJWTMissing

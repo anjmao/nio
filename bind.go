@@ -1,4 +1,4 @@
-package dapi
+package nio
 
 import (
 	"encoding/json"
@@ -275,3 +275,4 @@ func setFloatField(value string, bitSize int, field reflect.Value) error {
 	}
 	return err
 }
+

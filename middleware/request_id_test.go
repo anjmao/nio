@@ -5,23 +5,23 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRequestID(t *testing.T) {
-	e := dapi.New()
+	e := nio.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	handler := func(c dapi.Context) error {
+	handler := func(c nio.Context) error {
 		return c.String(http.StatusOK, "test")
 	}
 
 	rid := RequestIDWithConfig(RequestIDConfig{})
 	h := rid(handler)
 	h(c)
-	assert.Len(t, rec.Header().Get(dapi.HeaderXRequestID), 32)
+	assert.Len(t, rec.Header().Get(nio.HeaderXRequestID), 32)
 
 	// Custom generator
 	rid = RequestIDWithConfig(RequestIDConfig{
@@ -29,5 +29,5 @@ func TestRequestID(t *testing.T) {
 	})
 	h = rid(handler)
 	h(c)
-	assert.Equal(t, rec.Header().Get(dapi.HeaderXRequestID), "customGenerator")
+	assert.Equal(t, rec.Header().Get(nio.HeaderXRequestID), "customGenerator")
 }

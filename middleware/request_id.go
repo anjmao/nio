@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"github.com/dostack/dapi"
-	"github.com/dostack/dapi/internal/random"
+	"github.com/dostack/nio"
+	"github.com/dostack/nio/internal/random"
 )
 
 type (
@@ -26,12 +26,12 @@ var (
 )
 
 // RequestID returns a X-Request-ID middleware.
-func RequestID() dapi.MiddlewareFunc {
+func RequestID() nio.MiddlewareFunc {
 	return RequestIDWithConfig(DefaultRequestIDConfig)
 }
 
 // RequestIDWithConfig returns a X-Request-ID middleware with config.
-func RequestIDWithConfig(config RequestIDConfig) dapi.MiddlewareFunc {
+func RequestIDWithConfig(config RequestIDConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultRequestIDConfig.Skipper
@@ -40,19 +40,19 @@ func RequestIDWithConfig(config RequestIDConfig) dapi.MiddlewareFunc {
 		config.Generator = generator
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
 
 			req := c.Request()
 			res := c.Response()
-			rid := req.Header.Get(dapi.HeaderXRequestID)
+			rid := req.Header.Get(nio.HeaderXRequestID)
 			if rid == "" {
 				rid = config.Generator()
 			}
-			res.Header().Set(dapi.HeaderXRequestID, rid)
+			res.Header().Set(nio.HeaderXRequestID, rid)
 
 			return next(c)
 		}

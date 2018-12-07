@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -58,13 +58,13 @@ var (
 
 // CORS returns a Cross-Origin Resource Sharing (CORS) middleware.
 // See: https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS
-func CORS() dapi.MiddlewareFunc {
+func CORS() nio.MiddlewareFunc {
 	return CORSWithConfig(DefaultCORSConfig)
 }
 
 // CORSWithConfig returns a CORS middleware with config.
 // See: `CORS()`.
-func CORSWithConfig(config CORSConfig) dapi.MiddlewareFunc {
+func CORSWithConfig(config CORSConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultCORSConfig.Skipper
@@ -81,15 +81,15 @@ func CORSWithConfig(config CORSConfig) dapi.MiddlewareFunc {
 	exposeHeaders := strings.Join(config.ExposeHeaders, ",")
 	maxAge := strconv.Itoa(config.MaxAge)
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
 
 			req := c.Request()
 			res := c.Response()
-			origin := req.Header.Get(dapi.HeaderOrigin)
+			origin := req.Header.Get(nio.HeaderOrigin)
 			allowOrigin := ""
 
 			// Check allowed origins
@@ -106,36 +106,36 @@ func CORSWithConfig(config CORSConfig) dapi.MiddlewareFunc {
 
 			// Simple request
 			if req.Method != http.MethodOptions {
-				res.Header().Add(dapi.HeaderVary, dapi.HeaderOrigin)
-				res.Header().Set(dapi.HeaderAccessControlAllowOrigin, allowOrigin)
+				res.Header().Add(nio.HeaderVary, nio.HeaderOrigin)
+				res.Header().Set(nio.HeaderAccessControlAllowOrigin, allowOrigin)
 				if config.AllowCredentials {
-					res.Header().Set(dapi.HeaderAccessControlAllowCredentials, "true")
+					res.Header().Set(nio.HeaderAccessControlAllowCredentials, "true")
 				}
 				if exposeHeaders != "" {
-					res.Header().Set(dapi.HeaderAccessControlExposeHeaders, exposeHeaders)
+					res.Header().Set(nio.HeaderAccessControlExposeHeaders, exposeHeaders)
 				}
 				return next(c)
 			}
 
 			// Preflight request
-			res.Header().Add(dapi.HeaderVary, dapi.HeaderOrigin)
-			res.Header().Add(dapi.HeaderVary, dapi.HeaderAccessControlRequestMethod)
-			res.Header().Add(dapi.HeaderVary, dapi.HeaderAccessControlRequestHeaders)
-			res.Header().Set(dapi.HeaderAccessControlAllowOrigin, allowOrigin)
-			res.Header().Set(dapi.HeaderAccessControlAllowMethods, allowMethods)
+			res.Header().Add(nio.HeaderVary, nio.HeaderOrigin)
+			res.Header().Add(nio.HeaderVary, nio.HeaderAccessControlRequestMethod)
+			res.Header().Add(nio.HeaderVary, nio.HeaderAccessControlRequestHeaders)
+			res.Header().Set(nio.HeaderAccessControlAllowOrigin, allowOrigin)
+			res.Header().Set(nio.HeaderAccessControlAllowMethods, allowMethods)
 			if config.AllowCredentials {
-				res.Header().Set(dapi.HeaderAccessControlAllowCredentials, "true")
+				res.Header().Set(nio.HeaderAccessControlAllowCredentials, "true")
 			}
 			if allowHeaders != "" {
-				res.Header().Set(dapi.HeaderAccessControlAllowHeaders, allowHeaders)
+				res.Header().Set(nio.HeaderAccessControlAllowHeaders, allowHeaders)
 			} else {
-				h := req.Header.Get(dapi.HeaderAccessControlRequestHeaders)
+				h := req.Header.Get(nio.HeaderAccessControlRequestHeaders)
 				if h != "" {
-					res.Header().Set(dapi.HeaderAccessControlAllowHeaders, h)
+					res.Header().Set(nio.HeaderAccessControlAllowHeaders, h)
 				}
 			}
 			if config.MaxAge > 0 {
-				res.Header().Set(dapi.HeaderAccessControlMaxAge, maxAge)
+				res.Header().Set(nio.HeaderAccessControlMaxAge, maxAge)
 			}
 			return c.NoContent(http.StatusNoContent)
 		}

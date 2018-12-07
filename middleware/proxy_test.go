@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,7 +68,7 @@ func TestProxy(t *testing.T) {
 	}
 
 	// Random
-	e := dapi.New()
+	e := nio.New()
 	e.Use(Proxy(rb))
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := newCloseNotifyRecorder()
@@ -90,7 +90,7 @@ func TestProxy(t *testing.T) {
 
 	// Round-robin
 	rrb := NewRoundRobinBalancer(targets)
-	e = dapi.New()
+	e = nio.New()
 	e.Use(Proxy(rrb))
 	rec = newCloseNotifyRecorder()
 	e.ServeHTTP(rec, req)
@@ -102,7 +102,7 @@ func TestProxy(t *testing.T) {
 	assert.Equal(t, "target 2", body)
 
 	// Rewrite
-	e = dapi.New()
+	e = nio.New()
 	e.Use(ProxyWithConfig(ProxyConfig{
 		Balancer: rrb,
 		Rewrite: map[string]string{
@@ -127,15 +127,15 @@ func TestProxy(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 
 	// ProxyTarget is set in context
-	contextObserver := func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) (err error) {
+	contextObserver := func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) (err error) {
 			next(c)
 			assert.Contains(t, targets, c.Get("target"), "target is not set in context")
 			return nil
 		}
 	}
 	rrb1 := NewRoundRobinBalancer(targets)
-	e = dapi.New()
+	e = nio.New()
 	e.Use(contextObserver)
 	e.Use(Proxy(rrb1))
 	rec = newCloseNotifyRecorder()

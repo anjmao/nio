@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dostack/dapi"
+	"github.com/dostack/nio"
 )
 
 type (
@@ -24,7 +24,7 @@ type (
 	}
 
 	// BasicAuthValidator defines a function to validate BasicAuth credentials.
-	BasicAuthValidator func(string, string, dapi.Context) (bool, error)
+	BasicAuthValidator func(string, string, nio.Context) (bool, error)
 )
 
 const (
@@ -44,7 +44,7 @@ var (
 //
 // For valid credentials it calls the next handler.
 // For missing or invalid credentials, it sends "401 - Unauthorized" response.
-func BasicAuth(fn BasicAuthValidator) dapi.MiddlewareFunc {
+func BasicAuth(fn BasicAuthValidator) nio.MiddlewareFunc {
 	c := DefaultBasicAuthConfig
 	c.Validator = fn
 	return BasicAuthWithConfig(c)
@@ -52,10 +52,10 @@ func BasicAuth(fn BasicAuthValidator) dapi.MiddlewareFunc {
 
 // BasicAuthWithConfig returns an BasicAuth middleware with config.
 // See `BasicAuth()`.
-func BasicAuthWithConfig(config BasicAuthConfig) dapi.MiddlewareFunc {
+func BasicAuthWithConfig(config BasicAuthConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Validator == nil {
-		panic("dapi: basic-auth middleware requires a validator function")
+		panic("nio: basic-auth middleware requires a validator function")
 	}
 	if config.Skipper == nil {
 		config.Skipper = DefaultBasicAuthConfig.Skipper
@@ -64,13 +64,13 @@ func BasicAuthWithConfig(config BasicAuthConfig) dapi.MiddlewareFunc {
 		config.Realm = defaultRealm
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
 
-			auth := c.Request().Header.Get(dapi.HeaderAuthorization)
+			auth := c.Request().Header.Get(nio.HeaderAuthorization)
 			l := len(basic)
 
 			if len(auth) > l+1 && strings.ToLower(auth[:l]) == basic {
@@ -99,8 +99,8 @@ func BasicAuthWithConfig(config BasicAuthConfig) dapi.MiddlewareFunc {
 			}
 
 			// Need to return `401` for browsers to pop-up login box.
-			c.Response().Header().Set(dapi.HeaderWWWAuthenticate, basic+" realm="+realm)
-			return dapi.ErrUnauthorized
+			c.Response().Header().Set(nio.HeaderWWWAuthenticate, basic+" realm="+realm)
+			return nio.ErrUnauthorized
 		}
 	}
 }

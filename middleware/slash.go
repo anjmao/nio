@@ -1,6 +1,6 @@
 package middleware
 
-import "github.com/dostack/dapi"
+import "github.com/dostack/nio"
 
 type (
 	// TrailingSlashConfig defines the config for TrailingSlash middleware.
@@ -24,21 +24,21 @@ var (
 // AddTrailingSlash returns a root level (before router) middleware which adds a
 // trailing slash to the request `URL#Path`.
 //
-// Usage `Dapi#Pre(AddTrailingSlash())`
-func AddTrailingSlash() dapi.MiddlewareFunc {
+// Usage `Nio#Pre(AddTrailingSlash())`
+func AddTrailingSlash() nio.MiddlewareFunc {
 	return AddTrailingSlashWithConfig(DefaultTrailingSlashConfig)
 }
 
 // AddTrailingSlashWithConfig returns a AddTrailingSlash middleware with config.
 // See `AddTrailingSlash()`.
-func AddTrailingSlashWithConfig(config TrailingSlashConfig) dapi.MiddlewareFunc {
+func AddTrailingSlashWithConfig(config TrailingSlashConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultTrailingSlashConfig.Skipper
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -71,21 +71,21 @@ func AddTrailingSlashWithConfig(config TrailingSlashConfig) dapi.MiddlewareFunc 
 // RemoveTrailingSlash returns a root level (before router) middleware which removes
 // a trailing slash from the request URI.
 //
-// Usage `Dapi#Pre(RemoveTrailingSlash())`
-func RemoveTrailingSlash() dapi.MiddlewareFunc {
+// Usage `Nio#Pre(RemoveTrailingSlash())`
+func RemoveTrailingSlash() nio.MiddlewareFunc {
 	return RemoveTrailingSlashWithConfig(TrailingSlashConfig{})
 }
 
 // RemoveTrailingSlashWithConfig returns a RemoveTrailingSlash middleware with config.
 // See `RemoveTrailingSlash()`.
-func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) dapi.MiddlewareFunc {
+func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) nio.MiddlewareFunc {
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultTrailingSlashConfig.Skipper
 	}
 
-	return func(next dapi.HandlerFunc) dapi.HandlerFunc {
-		return func(c dapi.Context) error {
+	return func(next nio.HandlerFunc) nio.HandlerFunc {
+		return func(c nio.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
