@@ -2,9 +2,9 @@ package nio
 
 import (
 	"bufio"
+	"github.com/dostack/nio/log"
 	"net"
 	"net/http"
-	"github.com/dostack/nio/log"
 )
 
 type (
@@ -12,7 +12,6 @@ type (
 	// by an HTTP handler to construct an HTTP response.
 	// See: https://golang.org/pkg/net/http/#ResponseWriter
 	Response struct {
-		nio         *Nio
 		beforeFuncs []func()
 		afterFuncs  []func()
 		Writer      http.ResponseWriter
@@ -23,8 +22,8 @@ type (
 )
 
 // NewResponse creates a new instance of Response.
-func NewResponse(w http.ResponseWriter, e *Nio) (r *Response) {
-	return &Response{Writer: w, nio: e}
+func NewResponse(w http.ResponseWriter) (r *Response) {
+	return &Response{Writer: w}
 }
 
 // Header returns the header map for the writer that will be sent by

@@ -268,7 +268,7 @@ func New() (e *Nio) {
 func (e *Nio) NewContext(r *http.Request, w http.ResponseWriter) Context {
 	return &context{
 		request:  r,
-		response: NewResponse(w, e),
+		response: NewResponse(w),
 		store:    make(Map),
 		nio:      e,
 		pvalues:  make([]string, *e.maxParam),
