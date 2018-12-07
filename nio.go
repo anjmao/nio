@@ -123,21 +123,6 @@ type (
 	}
 )
 
-// HTTP methods
-// NOTE: Deprecated, please use the stdlib constants directly instead.
-const (
-	CONNECT = http.MethodConnect
-	DELETE  = http.MethodDelete
-	GET     = http.MethodGet
-	HEAD    = http.MethodHead
-	OPTIONS = http.MethodOptions
-	PATCH   = http.MethodPatch
-	POST    = http.MethodPost
-	//PROPFIND = "PROPFIND"
-	PUT   = http.MethodPut
-	TRACE = http.MethodTrace
-)
-
 // MIME types
 const (
 	MIMEApplicationJSON                  = "application/json"
@@ -302,7 +287,7 @@ func (e *Nio) NewContext(r *http.Request, w http.ResponseWriter) Context {
 		request:  r,
 		response: NewResponse(w, e),
 		store:    make(Map),
-		nio:     e,
+		nio:      e,
 		pvalues:  make([]string, *e.maxParam),
 		handler:  NotFoundHandler,
 	}
