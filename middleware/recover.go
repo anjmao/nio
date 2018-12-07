@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/dostack/nio"
+	"github.com/dostack/nio/log"
 )
 
 type (
@@ -70,7 +71,7 @@ func RecoverWithConfig(config RecoverConfig) nio.MiddlewareFunc {
 					stack := make([]byte, config.StackSize)
 					length := runtime.Stack(stack, !config.DisableStackAll)
 					if !config.DisablePrintStack {
-						c.Logger().Printf("[PANIC RECOVER] %v %s\n", err, stack[:length])
+						log.Printf("[PANIC RECOVER] %v %s\n", err, stack[:length])
 					}
 					c.Error(err)
 				}
@@ -79,3 +80,4 @@ func RecoverWithConfig(config RecoverConfig) nio.MiddlewareFunc {
 		}
 	}
 }
+

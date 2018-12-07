@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/dostack/nio"
+	"github.com/dostack/nio/log"
 )
 
 // TODO: Handle TLS proxy
@@ -123,7 +124,7 @@ func proxyRaw(t *ProxyTarget, c nio.Context) http.Handler {
 		go cp(in, out)
 		err = <-errCh
 		if err != nil && err != io.EOF {
-			c.Logger().Errorf("proxy raw, copy body error=%v, url=%s", t.URL, err)
+			log.Errorf("proxy raw, copy body error=%v, url=%s", t.URL, err)
 		}
 	})
 }
@@ -256,3 +257,4 @@ func ProxyWithConfig(config ProxyConfig) nio.MiddlewareFunc {
 		}
 	}
 }
+

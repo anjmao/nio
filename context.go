@@ -176,9 +176,6 @@ type (
 		// SetHandler sets the matched handler by router.
 		SetHandler(h HandlerFunc)
 
-		// Logger returns the `Logger` instance.
-		Logger() Logger
-
 		// Nio returns the `Nio` instance.
 		Nio() *Nio
 
@@ -197,7 +194,7 @@ type (
 		query    url.Values
 		handler  HandlerFunc
 		store    Map
-		nio     *Nio
+		nio      *Nio
 	}
 )
 
@@ -558,10 +555,6 @@ func (c *context) SetHandler(h HandlerFunc) {
 	c.handler = h
 }
 
-func (c *context) Logger() Logger {
-	return c.nio.Logger
-}
-
 func (c *context) Reset(r *http.Request, w http.ResponseWriter) {
 	c.request = r
 	c.response.reset(w)
@@ -573,3 +566,4 @@ func (c *context) Reset(r *http.Request, w http.ResponseWriter) {
 	// NOTE: Don't reset because it has to have length c.nio.maxParam at all times
 	// c.pvalues = nil
 }
+

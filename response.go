@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"net"
 	"net/http"
+	"github.com/dostack/nio/log"
 )
 
 type (
@@ -11,7 +12,7 @@ type (
 	// by an HTTP handler to construct an HTTP response.
 	// See: https://golang.org/pkg/net/http/#ResponseWriter
 	Response struct {
-		nio        *Nio
+		nio         *Nio
 		beforeFuncs []func()
 		afterFuncs  []func()
 		Writer      http.ResponseWriter
@@ -53,7 +54,7 @@ func (r *Response) After(fn func()) {
 // used to send error codes.
 func (r *Response) WriteHeader(code int) {
 	if r.Committed {
-		r.nio.Logger.Warn("response already committed")
+		log.Warningln("response already committed")
 		return
 	}
 	for _, fn := range r.beforeFuncs {
@@ -108,3 +109,4 @@ func (r *Response) reset(w http.ResponseWriter) {
 	r.Status = http.StatusOK
 	r.Committed = false
 }
+

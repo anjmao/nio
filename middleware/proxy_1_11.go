@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/dostack/nio"
+	"github.com/dostack/nio/log"
 )
 
 func proxyHTTP(tgt *ProxyTarget, c nio.Context, config ProxyConfig) http.Handler {
@@ -17,7 +18,7 @@ func proxyHTTP(tgt *ProxyTarget, c nio.Context, config ProxyConfig) http.Handler
 		if tgt.Name != "" {
 			desc = fmt.Sprintf("%s(%s)", tgt.Name, tgt.URL.String())
 		}
-		c.Logger().Errorf("remote %s unreachable, could not forward: %v", desc, err)
+		log.Errorf("remote %s unreachable, could not forward: %v", desc, err)
 		c.Error(nio.NewHTTPError(http.StatusServiceUnavailable))
 	}
 	proxy.Transport = config.Transport

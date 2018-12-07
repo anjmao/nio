@@ -42,6 +42,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/dostack/nio/log"
 	"io"
 	stdLog "log"
 	"net"
@@ -53,8 +54,6 @@ import (
 	"runtime"
 	"sync"
 	"time"
-
-	"github.com/dostack/nio/internal/log"
 )
 
 type (
@@ -78,7 +77,6 @@ type (
 		Binder           Binder
 		Validator        Validator
 		Renderer         Renderer
-		Logger           Logger
 	}
 
 	// Route contains a handler and information for matching against requests.
@@ -199,19 +197,7 @@ const (
 )
 
 const (
-	Version = "3.3.dev"
-	website = "https://nio.dostack.com"
-	// http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Nio
-	banner = `
-   ____    __
-  / __/___/ /  ___
- / _// __/ _ \/ _ \
-/___/\__/_//_/\___/ %s
-High performance, minimalist Go web framework
-%s
-____________________________________O/_______
-                                    O\
-`
+	Version = "1.0.0"
 )
 
 var (
@@ -265,15 +251,12 @@ func New() (e *Nio) {
 	e = &Nio{
 		Server:    new(http.Server),
 		TLSServer: new(http.Server),
-		Logger:    log.New("nio"),
 		maxParam:  new(int),
 	}
 	e.Server.Handler = e
 	e.TLSServer.Handler = e
 	e.HTTPErrorHandler = e.DefaultHTTPErrorHandler
 	e.Binder = &DefaultBinder{}
-	e.Logger.SetLevel(log.ERROR)
-	e.StdLogger = stdLog.New(e.Logger.Output(), e.Logger.Prefix()+": ", 0)
 	e.pool.New = func() interface{} {
 		return e.NewContext(nil, nil)
 	}
@@ -329,7 +312,7 @@ func (e *Nio) DefaultHTTPErrorHandler(err error, c Context) {
 			err = c.JSON(code, msg)
 		}
 		if err != nil {
-			e.Logger.Error(err)
+			log.Error(err)
 		}
 	}
 }
@@ -607,9 +590,6 @@ func (e *Nio) StartServer(s *http.Server) (err error) {
 	// Setup
 	s.ErrorLog = e.StdLogger
 	s.Handler = e
-	if e.Debug {
-		e.Logger.SetLevel(log.DEBUG)
-	}
 
 	if s.TLSConfig == nil {
 		if e.Listener == nil {
