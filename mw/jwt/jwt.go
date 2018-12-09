@@ -1,4 +1,4 @@
-package mw
+package jwt
 
 import (
 	"fmt"
@@ -6,17 +6,20 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/dostack/nio"
+	jwtgo "github.com/dgrijalva/jwt-go"
+
+	"github.com/anjmao/nio"
+	"github.com/anjmao/nio/mw"
 )
 
 type (
 	// JWTConfig defines the config for JWT middleware.
 	JWTConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper
+		Skipper mw.Skipper
 
 		// BeforeFunc defines a function which is executed just before the middleware.
-		BeforeFunc BeforeFunc
+		BeforeFunc mw.BeforeFunc
 
 		// SuccessHandler defines a function which is executed for a valid token.
 		SuccessHandler JWTSuccessHandler
@@ -39,7 +42,7 @@ type (
 
 		// Claims are extendable claims data defining token content.
 		// Optional. Default value jwt.MapClaims
-		Claims jwt.Claims
+		Claims jwtgo.Claims
 
 		// TokenLookup is a string in the form of "<source>:<name>" that is used
 		// to extract token from the request.
@@ -54,7 +57,7 @@ type (
 		// Optional. Default value "Bearer".
 		AuthScheme string
 
-		keyFunc jwt.Keyfunc
+		keyFunc jwtgo.Keyfunc
 	}
 
 	// JWTSuccessHandler defines a function which is executed for a valid token.
@@ -79,12 +82,12 @@ var (
 var (
 	// DefaultJWTConfig is the default JWT auth middleware config.
 	DefaultJWTConfig = JWTConfig{
-		Skipper:       DefaultSkipper,
+		Skipper:       mw.DefaultSkipper,
 		SigningMethod: AlgorithmHS256,
 		ContextKey:    "user",
 		TokenLookup:   "header:" + nio.HeaderAuthorization,
 		AuthScheme:    "Bearer",
-		Claims:        jwt.MapClaims{},
+		Claims:        jwtgo.MapClaims{},
 	}
 )
 
@@ -127,7 +130,7 @@ func JWTWithConfig(config JWTConfig) nio.MiddlewareFunc {
 	if config.AuthScheme == "" {
 		config.AuthScheme = DefaultJWTConfig.AuthScheme
 	}
-	config.keyFunc = func(t *jwt.Token) (interface{}, error) {
+	config.keyFunc = func(t *jwtgo.Token) (interface{}, error) {
 		// Check the signing method
 		if t.Method.Alg() != config.SigningMethod {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
@@ -162,14 +165,14 @@ func JWTWithConfig(config JWTConfig) nio.MiddlewareFunc {
 				}
 				return err
 			}
-			token := new(jwt.Token)
+			token := new(jwtgo.Token)
 			// Issue #647, #656
-			if _, ok := config.Claims.(jwt.MapClaims); ok {
-				token, err = jwt.Parse(auth, config.keyFunc)
+			if _, ok := config.Claims.(jwtgo.MapClaims); ok {
+				token, err = jwtgo.Parse(auth, config.keyFunc)
 			} else {
 				t := reflect.ValueOf(config.Claims).Type().Elem()
-				claims := reflect.New(t).Interface().(jwt.Claims)
-				token, err = jwt.ParseWithClaims(auth, claims, config.keyFunc)
+				claims := reflect.New(t).Interface().(jwtgo.Claims)
+				token, err = jwtgo.ParseWithClaims(auth, claims, config.keyFunc)
 			}
 			if err == nil && token.Valid {
 				// Store user information from token into context.
@@ -224,3 +227,4 @@ func jwtFromCookie(name string) jwtExtractor {
 		return cookie.Value, nil
 	}
 }
+

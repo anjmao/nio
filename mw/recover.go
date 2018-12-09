@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/dostack/nio"
-	"github.com/dostack/nio/log"
+	"github.com/anjmao/nio"
+	"github.com/anjmao/nio/log"
 )
 
 type (

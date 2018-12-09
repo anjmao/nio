@@ -3,7 +3,7 @@ package mw
 import (
 	"net/http"
 
-	"github.com/dostack/nio"
+	"github.com/anjmao/nio"
 )
 
 type (

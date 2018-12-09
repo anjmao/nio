@@ -2,7 +2,7 @@ package nio
 
 import (
 	"bufio"
-	"github.com/dostack/nio/log"
+	"github.com/anjmao/nio/log"
 	"net"
 	"net/http"
 )

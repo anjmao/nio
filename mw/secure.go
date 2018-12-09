@@ -3,7 +3,7 @@ package mw
 import (
 	"fmt"
 
-	"github.com/dostack/nio"
+	"github.com/anjmao/nio"
 )
 
 type (

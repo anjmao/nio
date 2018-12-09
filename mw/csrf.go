@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dostack/nio"
-	"github.com/dostack/nio/internal/random"
+	"github.com/anjmao/nio"
+	"github.com/anjmao/nio/internal/random"
 )
 
 type (

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dostack/nio"
+	"github.com/anjmao/nio"
 	"github.com/valyala/fasttemplate"
 )
 

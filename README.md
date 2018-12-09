@@ -10,8 +10,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/dostack/nio"
-	"github.com/dostack/nio/middleware"
+	"github.com/anjmao/nio"
+	"github.com/anjmao/nio/middleware"
 )
 
 func main() {

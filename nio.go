@@ -8,8 +8,8 @@ Example:
   import (
     "net/http"
 
-    "github.com/dostack/nio"
-    "github.com/dostack/nio/middleware"
+    "github.com/anjmao/nio"
+    "github.com/anjmao/nio/middleware"
   )
 
   // Handler
@@ -42,7 +42,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/dostack/nio/log"
+	"github.com/anjmao/nio/log"
 	"io"
 	stdLog "log"
 	"net"

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/dostack/nio"
-	"github.com/dostack/nio/log"
+	"github.com/anjmao/nio"
+	"github.com/anjmao/nio/log"
 )
 
 func proxyHTTP(tgt *ProxyTarget, c nio.Context, config ProxyConfig) http.Handler {

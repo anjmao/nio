@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dostack/nio"
+	"github.com/anjmao/nio"
 	"github.com/stretchr/testify/assert"
 )
 

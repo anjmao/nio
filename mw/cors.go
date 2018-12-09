@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dostack/nio"
+	"github.com/anjmao/nio"
 )
 
 type (

@@ -5,8 +5,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/dostack/nio"
-	"github.com/dostack/nio/internal/bytes"
+	"github.com/anjmao/nio"
+	"github.com/anjmao/nio/internal/bytes"
 )
 
 type (

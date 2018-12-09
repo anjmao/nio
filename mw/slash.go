@@ -1,6 +1,6 @@
 package mw
 
-import "github.com/dostack/nio"
+import "github.com/anjmao/nio"
 
 type (
 	// TrailingSlashConfig defines the config for TrailingSlash middleware.
