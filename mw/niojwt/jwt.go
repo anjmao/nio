@@ -1,4 +1,4 @@
-package jwt
+package niojwt
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 
 	"github.com/anjmao/nio"
 	"github.com/anjmao/nio/mw"
@@ -42,7 +42,7 @@ type (
 
 		// Claims are extendable claims data defining token content.
 		// Optional. Default value jwt.MapClaims
-		Claims jwtgo.Claims
+		Claims jwt.Claims
 
 		// TokenLookup is a string in the form of "<source>:<name>" that is used
 		// to extract token from the request.
@@ -57,7 +57,7 @@ type (
 		// Optional. Default value "Bearer".
 		AuthScheme string
 
-		keyFunc jwtgo.Keyfunc
+		keyFunc jwt.Keyfunc
 	}
 
 	// JWTSuccessHandler defines a function which is executed for a valid token.
@@ -87,7 +87,7 @@ var (
 		ContextKey:    "user",
 		TokenLookup:   "header:" + nio.HeaderAuthorization,
 		AuthScheme:    "Bearer",
-		Claims:        jwtgo.MapClaims{},
+		Claims:        jwt.MapClaims{},
 	}
 )
 
@@ -130,7 +130,7 @@ func JWTWithConfig(config JWTConfig) nio.MiddlewareFunc {
 	if config.AuthScheme == "" {
 		config.AuthScheme = DefaultJWTConfig.AuthScheme
 	}
-	config.keyFunc = func(t *jwtgo.Token) (interface{}, error) {
+	config.keyFunc = func(t *jwt.Token) (interface{}, error) {
 		// Check the signing method
 		if t.Method.Alg() != config.SigningMethod {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
@@ -165,14 +165,14 @@ func JWTWithConfig(config JWTConfig) nio.MiddlewareFunc {
 				}
 				return err
 			}
-			token := new(jwtgo.Token)
+			token := new(jwt.Token)
 			// Issue #647, #656
-			if _, ok := config.Claims.(jwtgo.MapClaims); ok {
-				token, err = jwtgo.Parse(auth, config.keyFunc)
+			if _, ok := config.Claims.(jwt.MapClaims); ok {
+				token, err = jwt.Parse(auth, config.keyFunc)
 			} else {
 				t := reflect.ValueOf(config.Claims).Type().Elem()
-				claims := reflect.New(t).Interface().(jwtgo.Claims)
-				token, err = jwtgo.ParseWithClaims(auth, claims, config.keyFunc)
+				claims := reflect.New(t).Interface().(jwt.Claims)
+				token, err = jwt.ParseWithClaims(auth, claims, config.keyFunc)
 			}
 			if err == nil && token.Valid {
 				// Store user information from token into context.

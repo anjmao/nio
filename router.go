@@ -8,7 +8,7 @@ type (
 	Router struct {
 		tree   *node
 		routes map[string]*Route
-		nio   *Nio
+		nio    *Nio
 	}
 	node struct {
 		kind          kind
@@ -49,7 +49,7 @@ func NewRouter(e *Nio) *Router {
 			methodHandler: new(methodHandler),
 		},
 		routes: map[string]*Route{},
-		nio:   e,
+		nio:    e,
 	}
 }
 
@@ -433,3 +433,4 @@ func (r *Router) Find(method, path string, c Context) {
 
 	return
 }
+

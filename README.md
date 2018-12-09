@@ -9,8 +9,8 @@ package main
 
 import (
 	"net/http"
-	"log"
 	"github.com/anjmao/nio"
+	"github.com/anjmao/nio/log"
 	"github.com/anjmao/nio/mw"
 )
 
@@ -31,6 +31,6 @@ func main() {
 
 // Handler
 func hello(c nio.Context) error {
-	retueturn c.String(http.StatusOK, "Hello, World!")
+	return c.String(http.StatusOK, "Hello, World!")
 }
 ```

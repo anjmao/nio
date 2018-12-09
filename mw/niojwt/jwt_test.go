@@ -1,12 +1,12 @@
-package jwt
+package niojwt
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/anjmao/nio"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ type jwtCustomInfo struct {
 
 // jwtCustomClaims are custom claims expanding default ones.
 type jwtCustomClaims struct {
-	*jwtgo.StandardClaims
+	*jwt.StandardClaims
 	jwtCustomInfo
 }
 
@@ -224,3 +224,4 @@ func TestJWT(t *testing.T) {
 		}
 	}
 }
+
