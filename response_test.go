@@ -13,7 +13,7 @@ func TestResponse(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	res := &Response{nio: e, Writer: rec}
+	res := &Response{Writer: rec}
 
 	// Before
 	res.Before(func() {
@@ -22,3 +22,4 @@ func TestResponse(t *testing.T) {
 	res.Write([]byte("test"))
 	assert.Equal(t, "nio", rec.Header().Get(HeaderServer))
 }
+
