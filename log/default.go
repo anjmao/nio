@@ -2,7 +2,7 @@ package log
 
 import "os"
 
-var logger = newLoggerV2()
+var logger = newLogger()
 
 // V reports whether verbosity level l is at least the requested verbose level.
 func V(l int) bool {

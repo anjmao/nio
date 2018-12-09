@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/anjmao/nio"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +18,7 @@ type jwtCustomInfo struct {
 
 // jwtCustomClaims are custom claims expanding default ones.
 type jwtCustomClaims struct {
-	*jwt.StandardClaims
+	*jwtgo.StandardClaims
 	jwtCustomInfo
 }
 

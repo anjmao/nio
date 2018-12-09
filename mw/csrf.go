@@ -208,3 +208,4 @@ func csrfTokenFromQuery(param string) csrfTokenExtractor {
 func validateCSRFToken(token, clientToken string) bool {
 	return subtle.ConstantTimeCompare([]byte(token), []byte(clientToken)) == 1
 }
+

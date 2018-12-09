@@ -9,28 +9,28 @@ package main
 
 import (
 	"net/http"
-
+	"log"
 	"github.com/anjmao/nio"
-	"github.com/anjmao/nio/middleware"
+	"github.com/anjmao/nio/mw"
 )
 
 func main() {
 	// Nio instance
-	d := nio.New()
+	n := nio.New()
 
 	// Middleware
-	d.Use(middleware.Logger())
-	d.Use(middleware.Recover())
+	n.Use(mw.Logger())
+	n.Use(mw.Recover())
 
 	// Routes
-	d.GET("/", hello)
+	n.GET("/", hello)
 
 	// Start server
-	d.Logger.Fatal(d.Start(":1323"))
+	log.Fatal(n.Start(":1323"))
 }
 
 // Handler
 func hello(c nio.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
+	retueturn c.String(http.StatusOK, "Hello, World!")
 }
 ```

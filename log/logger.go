@@ -8,8 +8,8 @@ import (
 	"strconv"
 )
 
-// LoggerV2 does underlying logging work for grpclog.
-type LoggerV2 interface {
+// Logger does underlying logging work for nio.
+type Logger interface {
 	// Info logs to INFO log. Arguments are handled in the manner of fmt.Print.
 	Info(args ...interface{})
 	// Infoln logs to INFO log. Arguments are handled in the manner of fmt.Println.
@@ -29,24 +29,21 @@ type LoggerV2 interface {
 	// Errorf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
 	Errorf(format string, args ...interface{})
 	// Fatal logs to ERROR log. Arguments are handled in the manner of fmt.Print.
-	// gRPC ensures that all Fatal logs will exit with os.Exit(1).
 	// Implementations may also call os.Exit() with a non-zero exit code.
 	Fatal(args ...interface{})
 	// Fatalln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
-	// gRPC ensures that all Fatal logs will exit with os.Exit(1).
 	// Implementations may also call os.Exit() with a non-zero exit code.
 	Fatalln(args ...interface{})
 	// Fatalf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
-	// gRPC ensures that all Fatal logs will exit with os.Exit(1).
 	// Implementations may also call os.Exit() with a non-zero exit code.
 	Fatalf(format string, args ...interface{})
 	// V reports whether verbosity level l is at least the requested verbose level.
 	V(l int) bool
 }
 
-// SetLoggerV2 sets logger that is used in grpc to a V2 logger.
-// Not mutex-protected, should be called before any gRPC functions.
-func SetLoggerV2(l LoggerV2) {
+// SetLogger sets logger that is used in nio to a logger.
+// Not mutex-protected, should be called before any nio functions.
+func SetLogger(l Logger) {
 	logger = l
 }
 
@@ -69,24 +66,24 @@ var severityName = []string{
 	fatalLog:   "FATAL",
 }
 
-// loggerT is the default logger used by grpclog.
+// loggerT is the default logger used by nio.
 type loggerT struct {
 	m []*log.Logger
 	v int
 }
 
-// NewLoggerV2 creates a loggerV2 with the provided writers.
+// NewLogger creates a logger with the provided writers.
 // Fatal logs will be written to errorW, warningW, infoW, followed by exit(1).
 // Error logs will be written to errorW, warningW and infoW.
 // Warning logs will be written to warningW and infoW.
 // Info logs will be written to infoW.
-func NewLoggerV2(infoW, warningW, errorW io.Writer) LoggerV2 {
-	return NewLoggerV2WithVerbosity(infoW, warningW, errorW, 0)
+func NewLogger(infoW, warningW, errorW io.Writer) Logger {
+	return NewLoggerWithVerbosity(infoW, warningW, errorW, 0)
 }
 
-// NewLoggerV2WithVerbosity creates a loggerV2 with the provided writers and
+// NewLoggerWithVerbosity creates a loggerV2 with the provided writers and
 // verbosity level.
-func NewLoggerV2WithVerbosity(infoW, warningW, errorW io.Writer, v int) LoggerV2 {
+func NewLoggerWithVerbosity(infoW, warningW, errorW io.Writer, v int) Logger {
 	var m []*log.Logger
 	m = append(m, log.New(infoW, severityName[infoLog]+": ", log.LstdFlags))
 	m = append(m, log.New(io.MultiWriter(infoW, warningW), severityName[warningLog]+": ", log.LstdFlags))
@@ -96,14 +93,14 @@ func NewLoggerV2WithVerbosity(infoW, warningW, errorW io.Writer, v int) LoggerV2
 	return &loggerT{m: m, v: v}
 }
 
-// newLoggerV2 creates a loggerV2 to be used as default logger.
+// newLogger creates a logger to be used as default logger.
 // All logs are written to stderr.
-func newLoggerV2() LoggerV2 {
+func newLogger() Logger {
 	errorW := ioutil.Discard
 	warningW := ioutil.Discard
 	infoW := ioutil.Discard
 
-	logLevel := os.Getenv("GRPC_GO_LOG_SEVERITY_LEVEL")
+	logLevel := os.Getenv("NIO_GO_LOG_SEVERITY_LEVEL")
 	switch logLevel {
 	case "", "ERROR", "error": // If env is unset, set level to ERROR.
 		errorW = os.Stderr
@@ -114,11 +111,11 @@ func newLoggerV2() LoggerV2 {
 	}
 
 	var v int
-	vLevel := os.Getenv("GRPC_GO_LOG_VERBOSITY_LEVEL")
+	vLevel := os.Getenv("NIO_GO_LOG_VERBOSITY_LEVEL")
 	if vl, err := strconv.Atoi(vLevel); err == nil {
 		v = vl
 	}
-	return NewLoggerV2WithVerbosity(infoW, warningW, errorW, v)
+	return NewLoggerWithVerbosity(infoW, warningW, errorW, v)
 }
 
 func (g *loggerT) Info(args ...interface{}) {

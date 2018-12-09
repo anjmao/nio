@@ -67,3 +67,4 @@ func TestCORS(t *testing.T) {
 	assert.Equal(t, "true", rec.Header().Get(nio.HeaderAccessControlAllowCredentials))
 	assert.Equal(t, "3600", rec.Header().Get(nio.HeaderAccessControlMaxAge))
 }
+

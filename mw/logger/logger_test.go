@@ -1,4 +1,4 @@
-package mw
+package logger
 
 import (
 	"bytes"

@@ -141,3 +141,4 @@ func CORSWithConfig(config CORSConfig) nio.MiddlewareFunc {
 		}
 	}
 }
+
