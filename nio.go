@@ -505,18 +505,6 @@ func (e *Nio) Routes() []*Route {
 	return routes
 }
 
-// AcquireContext returns an empty `Context` instance from the pool.
-// You must return the context by calling `ReleaseContext()`.
-func (e *Nio) AcquireContext() Context {
-	return e.pool.Get().(Context)
-}
-
-// ReleaseContext returns the `Context` instance back to the pool.
-// You must call it after `AcquireContext()`.
-func (e *Nio) ReleaseContext(c Context) {
-	e.pool.Put(c)
-}
-
 // ServeHTTP implements `http.Handler` interface, which serves HTTP requests.
 func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Acquire context

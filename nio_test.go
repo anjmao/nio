@@ -399,9 +399,9 @@ func TestNioMethodNotAllowed(t *testing.T) {
 
 func TestNioContext(t *testing.T) {
 	e := New()
-	c := e.AcquireContext()
+	c := e.pool.Get().(*context)
 	assert.IsType(t, new(context), c)
-	e.ReleaseContext(c)
+	e.pool.Put(c)
 }
 
 func TestNioStart(t *testing.T) {
