@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -27,13 +26,6 @@ type (
 
 		// Response returns `*Response`.
 		Response() *Response
-
-		// Scheme returns the HTTP protocol scheme, `http` or `https`.
-		Scheme() string
-
-		// RealIP returns the client's network address based on `X-Forwarded-For`
-		// or `X-Real-IP` request header.
-		RealIP() string
 
 		// Path returns the registered path for the handler.
 		Path() string
@@ -95,10 +87,6 @@ type (
 		// Bind binds the request body into provided type `i`. The default binder
 		// does it based on Content-Type header.
 		Bind(i interface{}) error
-
-		// Validate validates provided `i`. It is usually called after `Context#Bind()`.
-		// Validator must be registered using `Nio#Validator`.
-		Validate(i interface{}) error
 
 		// Render renders a template with data and sends a text/html response with status
 		// code. Renderer must be registered using `nio.Renderer`.
@@ -172,11 +160,6 @@ type (
 
 		// Nio returns the `Nio` instance.
 		Nio() *Nio
-
-		// Reset resets the context after request completes. It must be called along
-		// with `Nio#AcquireContext()` and `Nio#ReleaseContext()`.
-		// See `Nio#ServeHTTP()`
-		Reset(r *http.Request, w http.ResponseWriter)
 	}
 
 	context struct {
@@ -214,38 +197,6 @@ func (c *context) SetRequest(r *http.Request) {
 
 func (c *context) Response() *Response {
 	return c.response
-}
-
-func (c *context) Scheme() string {
-	// Can't use `r.Request.URL.Scheme`
-	// See: https://groups.google.com/forum/#!topic/golang-nuts/pMUkBlQBDF0
-	if c.request.TLS != nil {
-		return "https"
-	}
-	if scheme := c.request.Header.Get(HeaderXForwardedProto); scheme != "" {
-		return scheme
-	}
-	if scheme := c.request.Header.Get(HeaderXForwardedProtocol); scheme != "" {
-		return scheme
-	}
-	if ssl := c.request.Header.Get(HeaderXForwardedSsl); ssl == "on" {
-		return "https"
-	}
-	if scheme := c.request.Header.Get(HeaderXUrlScheme); scheme != "" {
-		return scheme
-	}
-	return "http"
-}
-
-func (c *context) RealIP() string {
-	if ip := c.request.Header.Get(HeaderXForwardedFor); ip != "" {
-		return strings.Split(ip, ", ")[0]
-	}
-	if ip := c.request.Header.Get(HeaderXRealIP); ip != "" {
-		return ip
-	}
-	ra, _, _ := net.SplitHostPort(c.request.RemoteAddr)
-	return ra
 }
 
 func (c *context) Path() string {
@@ -353,13 +304,6 @@ func (c *context) Set(key string, val interface{}) {
 
 func (c *context) Bind(i interface{}) error {
 	return c.nio.Binder.Bind(i, c)
-}
-
-func (c *context) Validate(i interface{}) error {
-	if c.nio.Validator == nil {
-		return ErrValidatorNotRegistered
-	}
-	return c.nio.Validator.Validate(i)
 }
 
 func (c *context) Render(code int, name string, data interface{}) (err error) {
@@ -540,7 +484,7 @@ func (c *context) SetHandler(h HandlerFunc) {
 	c.handler = h
 }
 
-func (c *context) Reset(r *http.Request, w http.ResponseWriter) {
+func (c *context) reset(r *http.Request, w http.ResponseWriter) {
 	c.request = r
 	c.response.reset(w)
 	c.query = nil

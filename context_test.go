@@ -217,7 +217,7 @@ func TestContext(t *testing.T) {
 	c.SetParamValues("bar")
 	c.Set("foe", "ban")
 	c.query = url.Values(map[string][]string{"fon": {"baz"}})
-	c.Reset(req, httptest.NewRecorder())
+	c.reset(req, httptest.NewRecorder())
 	assert.Equal(0, len(c.ParamValues()))
 	assert.Equal(0, len(c.ParamNames()))
 	assert.Equal(0, len(c.store))

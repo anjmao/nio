@@ -42,7 +42,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/anjmao/nio/log"
 	"io"
 	stdLog "log"
 	"net"
@@ -54,6 +53,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/anjmao/nio/log"
 )
 
 type (
@@ -75,7 +76,6 @@ type (
 		HidePort         bool
 		HTTPErrorHandler HTTPErrorHandler
 		Binder           Binder
-		Validator        Validator
 		Renderer         Renderer
 	}
 
@@ -101,11 +101,6 @@ type (
 
 	// HTTPErrorHandler is a centralized HTTP error handler.
 	HTTPErrorHandler func(error, Context)
-
-	// Validator is the interface that wraps the Validate function.
-	Validator interface {
-		Validate(i interface{}) error
-	}
 
 	// Renderer is the interface that wraps the Render function.
 	Renderer interface {
@@ -522,7 +517,7 @@ func (e *Nio) ReleaseContext(c Context) {
 func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Acquire context
 	c := e.pool.Get().(*context)
-	c.Reset(r, w)
+	c.reset(r, w)
 
 	h := NotFoundHandler
 
@@ -714,4 +709,3 @@ func newListener(address string) (*tcpKeepAliveListener, error) {
 	}
 	return &tcpKeepAliveListener{l.(*net.TCPListener)}, nil
 }
-
