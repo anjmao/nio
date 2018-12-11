@@ -80,4 +80,3 @@ func RecoverWithConfig(config RecoverConfig) nio.MiddlewareFunc {
 		}
 	}
 }
-
