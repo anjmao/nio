@@ -100,7 +100,7 @@ func SecureWithConfig(config SecureConfig) nio.MiddlewareFunc {
 			if config.XFrameOptions != "" {
 				res.Header().Set(nio.HeaderXFrameOptions, config.XFrameOptions)
 			}
-			if (c.IsTLS() || (req.Header.Get(nio.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
+			if (c.Request().TLS != nil || (req.Header.Get(nio.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
 				subdomains := ""
 				if !config.HSTSExcludeSubdomains {
 					subdomains = "; includeSubdomains"

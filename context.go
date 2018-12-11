@@ -28,12 +28,6 @@ type (
 		// Response returns `*Response`.
 		Response() *Response
 
-		// IsTLS returns true if HTTP connection is TLS otherwise false.
-		IsTLS() bool
-
-		// IsWebSocket returns true if HTTP connection is WebSocket otherwise false.
-		IsWebSocket() bool
-
 		// Scheme returns the HTTP protocol scheme, `http` or `https`.
 		Scheme() string
 
@@ -222,19 +216,10 @@ func (c *context) Response() *Response {
 	return c.response
 }
 
-func (c *context) IsTLS() bool {
-	return c.request.TLS != nil
-}
-
-func (c *context) IsWebSocket() bool {
-	upgrade := c.request.Header.Get(HeaderUpgrade)
-	return upgrade == "websocket" || upgrade == "Websocket"
-}
-
 func (c *context) Scheme() string {
 	// Can't use `r.Request.URL.Scheme`
 	// See: https://groups.google.com/forum/#!topic/golang-nuts/pMUkBlQBDF0
-	if c.IsTLS() {
+	if c.request.TLS != nil {
 		return "https"
 	}
 	if scheme := c.request.Header.Get(HeaderXForwardedProto); scheme != "" {
@@ -566,4 +551,3 @@ func (c *context) Reset(r *http.Request, w http.ResponseWriter) {
 	// NOTE: Don't reset because it has to have length c.nio.maxParam at all times
 	// c.pvalues = nil
 }
-
