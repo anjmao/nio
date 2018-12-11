@@ -42,7 +42,6 @@ func TestRewrite(t *testing.T) {
 // Issue #1086
 func TestNioRewritePreMiddleware(t *testing.T) {
 	e := nio.New()
-	r := e.Router()
 
 	// Rewrite old url to new one
 	e.Pre(RewriteWithConfig(RewriteConfig{
@@ -52,7 +51,7 @@ func TestNioRewritePreMiddleware(t *testing.T) {
 	}))
 
 	// Route
-	r.Add(http.MethodGet, "/new", func(c nio.Context) error {
+	e.Add(http.MethodGet, "/new", func(c nio.Context) error {
 		return c.NoContent(200)
 	})
 
@@ -66,7 +65,6 @@ func TestNioRewritePreMiddleware(t *testing.T) {
 // Issue #1143
 func TestRewriteWithConfigPreMiddleware_Issue1143(t *testing.T) {
 	e := nio.New()
-	r := e.Router()
 
 	e.Pre(RewriteWithConfig(RewriteConfig{
 		Rules: map[string]string{
@@ -75,10 +73,10 @@ func TestRewriteWithConfigPreMiddleware_Issue1143(t *testing.T) {
 		},
 	}))
 
-	r.Add(http.MethodGet, "/api/:version/hosts/:name", func(c nio.Context) error {
+	e.Add(http.MethodGet, "/api/:version/hosts/:name", func(c nio.Context) error {
 		return c.String(200, "hosts")
 	})
-	r.Add(http.MethodGet, "/api/:version/eng", func(c nio.Context) error {
+	e.Add(http.MethodGet, "/api/:version/eng", func(c nio.Context) error {
 		return c.String(200, "eng")
 	})
 

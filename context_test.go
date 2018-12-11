@@ -274,19 +274,18 @@ func TestContextCookie(t *testing.T) {
 
 func TestContextPath(t *testing.T) {
 	e := New()
-	r := e.Router()
 
-	r.Add(http.MethodGet, "/users/:id", nil)
+	e.Add(http.MethodGet, "/users/:id", nil)
 	c := e.NewContext(nil, nil)
-	r.Find(http.MethodGet, "/users/1", c)
+	e.router.Find(http.MethodGet, "/users/1", c)
 
 	assert := assert.New(t)
 
 	assert.Equal("/users/:id", c.Path())
 
-	r.Add(http.MethodGet, "/users/:uid/files/:fid", nil)
+	e.Add(http.MethodGet, "/users/:uid/files/:fid", nil)
 	c = e.NewContext(nil, nil)
-	r.Find(http.MethodGet, "/users/1/files/1", c)
+	e.router.Find(http.MethodGet, "/users/1/files/1", c)
 	assert.Equal("/users/:uid/files/:fid", c.Path())
 }
 
