@@ -61,7 +61,7 @@ type (
 		premiddleware    []MiddlewareFunc
 		middleware       []MiddlewareFunc
 		maxParam         *int
-		router           *Router
+		router           *router
 		notFoundHandler  HandlerFunc
 		pool             sync.Pool
 		Server           *http.Server
@@ -264,7 +264,7 @@ func New(opt ...Option) (e *Nio) {
 	e.pool.New = func() interface{} {
 		return e.NewContext(nil, nil)
 	}
-	e.router = NewRouter(e)
+	e.router = newRouter(e)
 	return
 }
 
@@ -278,11 +278,6 @@ func (e *Nio) NewContext(r *http.Request, w http.ResponseWriter) Context {
 		pvalues:  make([]string, *e.maxParam),
 		handler:  NotFoundHandler,
 	}
-}
-
-// Router returns router.
-func (e *Nio) Router() *Router {
-	return e.router
 }
 
 // DefaultHTTPErrorHandler is the default HTTP error handler. It sends a JSON response
@@ -442,7 +437,7 @@ func (e *Nio) File(path, file string, m ...MiddlewareFunc) *Route {
 // in the router with optional route-level middleware.
 func (e *Nio) Add(method, path string, handler HandlerFunc, middleware ...MiddlewareFunc) *Route {
 	name := handlerName(handler)
-	e.router.Add(method, path, func(c Context) error {
+	e.router.add(method, path, func(c Context) error {
 		h := handler
 		// Chain middleware
 		for i := len(middleware) - 1; i >= 0; i-- {
@@ -531,14 +526,14 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h := NotFoundHandler
 
 	if e.premiddleware == nil {
-		e.router.Find(r.Method, getPath(r), c)
+		e.router.find(r.Method, getPath(r), c)
 		h = c.Handler()
 		for i := len(e.middleware) - 1; i >= 0; i-- {
 			h = e.middleware[i](h)
 		}
 	} else {
 		h = func(c Context) error {
-			e.router.Find(r.Method, getPath(r), c)
+			e.router.find(r.Method, getPath(r), c)
 			h := c.Handler()
 			for i := len(e.middleware) - 1; i >= 0; i-- {
 				h = e.middleware[i](h)

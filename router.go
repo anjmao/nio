@@ -3,9 +3,9 @@ package nio
 import "net/http"
 
 type (
-	// Router is the registry of all registered routes for an `Nio` instance for
+	// router is the registry of all registered routes for an `Nio` instance for
 	// request matching and URL path parameter parsing.
-	Router struct {
+	router struct {
 		tree   *node
 		routes map[string]*Route
 		nio    *Nio
@@ -43,8 +43,8 @@ const (
 )
 
 // NewRouter returns a new Router instance.
-func NewRouter(e *Nio) *Router {
-	return &Router{
+func newRouter(e *Nio) *router {
+	return &router{
 		tree: &node{
 			methodHandler: new(methodHandler),
 		},
@@ -53,8 +53,8 @@ func NewRouter(e *Nio) *Router {
 	}
 }
 
-// Add registers a new route for method and path with matching handler.
-func (r *Router) Add(method, path string, h HandlerFunc) {
+// add registers a new route for method and path with matching handler.
+func (r *router) add(method, path string, h HandlerFunc) {
 	// Validate path
 	if path == "" {
 		panic("nio: path cannot be empty")
@@ -93,7 +93,7 @@ func (r *Router) Add(method, path string, h HandlerFunc) {
 	r.insert(method, path, h, skind, ppath, pnames)
 }
 
-func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string, pnames []string) {
+func (r *router) insert(method, path string, h HandlerFunc, t kind, ppath string, pnames []string) {
 	// Adjust max param
 	l := len(pnames)
 	if *r.nio.maxParam < l {
@@ -295,7 +295,7 @@ func (n *node) checkMethodNotAllowed() HandlerFunc {
 // - Get context from `Nio#AcquireContext()`
 // - Reset it `Context#Reset()`
 // - Return it `Nio#ReleaseContext()`.
-func (r *Router) Find(method, path string, c Context) {
+func (r *router) find(method, path string, c Context) {
 	ctx := c.(*context)
 	ctx.path = path
 	cn := r.tree // Current node as root
@@ -433,4 +433,3 @@ func (r *Router) Find(method, path string, c Context) {
 
 	return
 }
-

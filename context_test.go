@@ -277,7 +277,7 @@ func TestContextPath(t *testing.T) {
 
 	e.Add(http.MethodGet, "/users/:id", nil)
 	c := e.NewContext(nil, nil)
-	e.router.Find(http.MethodGet, "/users/1", c)
+	e.router.find(http.MethodGet, "/users/1", c)
 
 	assert := assert.New(t)
 
@@ -285,7 +285,7 @@ func TestContextPath(t *testing.T) {
 
 	e.Add(http.MethodGet, "/users/:uid/files/:fid", nil)
 	c = e.NewContext(nil, nil)
-	e.router.Find(http.MethodGet, "/users/1/files/1", c)
+	e.router.find(http.MethodGet, "/users/1/files/1", c)
 	assert.Equal("/users/:uid/files/:fid", c.Path())
 }
 
@@ -404,15 +404,14 @@ func TestContextStore(t *testing.T) {
 
 func TestContextHandler(t *testing.T) {
 	e := New()
-	r := e.Router()
 	b := new(bytes.Buffer)
 
-	r.Add(http.MethodGet, "/handler", func(Context) error {
+	e.Add(http.MethodGet, "/handler", func(Context) error {
 		_, err := b.Write([]byte("handler"))
 		return err
 	})
 	c := e.NewContext(nil, nil)
-	r.Find(http.MethodGet, "/handler", c)
+	e.router.find(http.MethodGet, "/handler", c)
 	c.Handler()(c)
 	assert.Equal(t, "handler", b.String())
 }
