@@ -1,7 +1,5 @@
 # nio
 
-
-
 ### Example
 
 ```go
@@ -19,7 +17,6 @@ func main() {
 	n := nio.New()
 
 	// Middleware
-	n.Use(mw.Logger())
 	n.Use(mw.Recover())
 
 	// Routes

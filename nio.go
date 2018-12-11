@@ -39,12 +39,10 @@ package nio
 import (
 	"bytes"
 	stdContext "context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
 	stdLog "log"
-	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -52,7 +50,6 @@ import (
 	"reflect"
 	"runtime"
 	"sync"
-	"time"
 
 	"github.com/anjmao/nio/log"
 )
@@ -68,9 +65,6 @@ type (
 		notFoundHandler  HandlerFunc
 		pool             sync.Pool
 		Server           *http.Server
-		TLSServer        *http.Server
-		Listener         net.Listener
-		TLSListener      net.Listener
 		DisableHTTP2     bool
 		Debug            bool
 		HidePort         bool
@@ -241,15 +235,30 @@ var (
 	}
 )
 
+type options struct {
+	server *http.Server
+}
+
+// A Option sets options such as credentials, tls, etc.
+type Option func(*options)
+
+func Server(server *http.Server) Option {
+	return func(o *options) {
+		o.server = server
+	}
+}
+
 // New creates an instance of nio.
-func New() (e *Nio) {
+func New(opt ...Option) (e *Nio) {
+	opts := options{server: new(http.Server)}
+	for _, o := range opt {
+		o(&opts)
+	}
 	e = &Nio{
-		Server:    new(http.Server),
-		TLSServer: new(http.Server),
-		maxParam:  new(int),
+		Server:   opts.server,
+		maxParam: new(int),
 	}
 	e.Server.Handler = e
-	e.TLSServer.Handler = e
 	e.HTTPErrorHandler = e.DefaultHTTPErrorHandler
 	e.Binder = &DefaultBinder{}
 	e.pool.New = func() interface{} {
@@ -553,7 +562,7 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Start starts an HTTP server.
 func (e *Nio) Start(address string) error {
 	e.Server.Addr = address
-	return e.StartServer(e.Server)
+	return e.Server.ListenAndServe()
 }
 
 // StartTLS starts an HTTPS server.
@@ -561,65 +570,19 @@ func (e *Nio) StartTLS(address string, certFile, keyFile string) (err error) {
 	if certFile == "" || keyFile == "" {
 		return errors.New("invalid tls configuration")
 	}
-	s := e.TLSServer
-	s.TLSConfig = new(tls.Config)
-	s.TLSConfig.Certificates = make([]tls.Certificate, 1)
-	s.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return
-	}
-	return e.startTLS(address)
-}
-
-func (e *Nio) startTLS(address string) error {
-	s := e.TLSServer
-	s.Addr = address
-	if !e.DisableHTTP2 {
-		s.TLSConfig.NextProtos = append(s.TLSConfig.NextProtos, "h2")
-	}
-	return e.StartServer(e.TLSServer)
-}
-
-// StartServer starts a custom http server.
-func (e *Nio) StartServer(s *http.Server) (err error) {
-	// Setup
-	s.ErrorLog = e.StdLogger
-	s.Handler = e
-
-	if s.TLSConfig == nil {
-		if e.Listener == nil {
-			e.Listener, err = newListener(s.Addr)
-			if err != nil {
-				return err
-			}
-		}
-		return s.Serve(e.Listener)
-	}
-	if e.TLSListener == nil {
-		l, err := newListener(s.Addr)
-		if err != nil {
-			return err
-		}
-		e.TLSListener = tls.NewListener(l, s.TLSConfig)
-	}
-	return s.Serve(e.TLSListener)
+	e.Server.Addr = address
+	return e.Server.ListenAndServeTLS(certFile, keyFile)
 }
 
 // Close immediately stops the server.
 // It internally calls `http.Server#Close()`.
 func (e *Nio) Close() error {
-	if err := e.TLSServer.Close(); err != nil {
-		return err
-	}
 	return e.Server.Close()
 }
 
 // Shutdown stops server the gracefully.
 // It internally calls `http.Server#Shutdown()`.
 func (e *Nio) Shutdown(ctx stdContext.Context) error {
-	if err := e.TLSServer.Shutdown(ctx); err != nil {
-		return err
-	}
 	return e.Server.Shutdown(ctx)
 }
 
@@ -677,35 +640,4 @@ func handlerName(h HandlerFunc) string {
 		return runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name()
 	}
 	return t.String()
-}
-
-// // PathUnescape is wraps `url.PathUnescape`
-// func PathUnescape(s string) (string, error) {
-// 	return url.PathUnescape(s)
-// }
-
-// tcpKeepAliveListener sets TCP keep-alive timeouts on accepted
-// connections. It's used by ListenAndServe and ListenAndServeTLS so
-// dead TCP connections (e.g. closing laptop mid-download) eventually
-// go away.
-type tcpKeepAliveListener struct {
-	*net.TCPListener
-}
-
-func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
-	tc, err := ln.AcceptTCP()
-	if err != nil {
-		return
-	}
-	tc.SetKeepAlive(true)
-	tc.SetKeepAlivePeriod(3 * time.Minute)
-	return tc, nil
-}
-
-func newListener(address string) (*tcpKeepAliveListener, error) {
-	l, err := net.Listen("tcp", address)
-	if err != nil {
-		return nil, err
-	}
-	return &tcpKeepAliveListener{l.(*net.TCPListener)}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	stdContext "context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -409,7 +410,9 @@ func TestNioContext(t *testing.T) {
 func TestNioStart(t *testing.T) {
 	e := New()
 	go func() {
-		assert.NoError(t, e.Start(":0"))
+		err := e.Start(":0")
+		fmt.Println("erroras", err)
+		assert.NoError(t, err)
 	}()
 	time.Sleep(200 * time.Millisecond)
 }
@@ -494,4 +497,3 @@ func TestNioShutdown(t *testing.T) {
 	err := <-errCh
 	assert.Equal(t, err.Error(), "http: Server closed")
 }
-
