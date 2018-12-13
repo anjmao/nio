@@ -6,18 +6,14 @@
 package main
 
 import (
-	"net/http"
-	"github.com/anjmao/nio"
-	"github.com/anjmao/nio/log"
-	"github.com/anjmao/nio/mw"
+    "net/http"
+    "log"
+	"github.com/go-nio/nio"
 )
 
 func main() {
 	// Nio instance
 	n := nio.New()
-
-	// Middleware
-	n.Use(mw.Recover())
 
 	// Routes
 	n.GET("/", hello)

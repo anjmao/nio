@@ -8,8 +8,8 @@ Example:
   import (
     "net/http"
 
-    "github.com/anjmao/nio"
-    "github.com/anjmao/nio/middleware"
+    "github.com/go-nio/nio"
+    "github.com/go-nio/nio/middleware"
   )
 
   // Handler
@@ -51,7 +51,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/anjmao/nio/log"
+	"github.com/go-nio/nio/log"
 )
 
 type (

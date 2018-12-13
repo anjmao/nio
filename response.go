@@ -2,9 +2,10 @@ package nio
 
 import (
 	"bufio"
-	"github.com/anjmao/nio/log"
 	"net"
 	"net/http"
+
+	"github.com/go-nio/nio/log"
 )
 
 type (
@@ -108,4 +109,3 @@ func (r *Response) reset(w http.ResponseWriter) {
 	r.Status = http.StatusOK
 	r.Committed = false
 }
-
