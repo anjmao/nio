@@ -237,6 +237,7 @@ var (
 
 type options struct {
 	server *http.Server
+	logger Logger
 }
 
 // A Option sets options such as credentials, tls, etc.
@@ -245,6 +246,12 @@ type Option func(*options)
 func Server(server *http.Server) Option {
 	return func(o *options) {
 		o.server = server
+	}
+}
+
+func ReplaceLogger(logger Logger) Option {
+	return func(o *options) {
+		o.logger = logger
 	}
 }
 
