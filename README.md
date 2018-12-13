@@ -23,7 +23,7 @@ package main
 import (
     "net/http"
     "log"
-	"github.com/go-nio/nio"
+    "github.com/go-nio/nio"
 )
 
 func main() {
