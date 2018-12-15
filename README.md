@@ -1,9 +1,12 @@
+# Nio
 ![](https://img.shields.io/travis/go-nio/nio.svg) ![](https://img.shields.io/codecov/c/github/go-nio/nio.svg)
 
+## Feature
 
-# Nio
-
-Minimalist Go web framework
+* Smart HTTP Routing
+* Data binding for JSON, XML and form payload
+* Middlewares on global, group or single route level
+* <b>Zero</b> external dependencies
 
 ## Getting Started
 
