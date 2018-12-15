@@ -38,7 +38,6 @@ package nio
 
 import (
 	"bytes"
-	stdContext "context"
 	"errors"
 	"fmt"
 	"io"
@@ -60,14 +59,11 @@ type (
 		router           *router
 		notFoundHandler  HandlerFunc
 		pool             sync.Pool
-		Server           *http.Server
-		DisableHTTP2     bool
+		logger           Logger
 		Debug            bool
-		HidePort         bool
 		HTTPErrorHandler HTTPErrorHandler
 		Binder           Binder
 		Renderer         Renderer
-		logger           Logger
 	}
 
 	// Route contains a handler and information for matching against requests.
@@ -97,9 +93,6 @@ type (
 	Renderer interface {
 		Render(io.Writer, string, interface{}, Context) error
 	}
-
-	// Map defines a generic map of type `map[string]interface{}`.
-	Map map[string]interface{}
 
 	// i is the interface for Nio and Group.
 	i interface {
@@ -182,10 +175,6 @@ const (
 	HeaderXCSRFToken              = "X-CSRF-Token"
 )
 
-const (
-	Version = "1.0.0"
-)
-
 var (
 	methods = [...]string{
 		http.MethodConnect,
@@ -233,18 +222,11 @@ var (
 )
 
 type options struct {
-	server *http.Server
 	logger Logger
 }
 
 // A Option sets options such as credentials, tls, etc.
 type Option func(*options)
-
-func Server(server *http.Server) Option {
-	return func(o *options) {
-		o.server = server
-	}
-}
 
 func SetLogger(logger Logger) Option {
 	return func(o *options) {
@@ -255,22 +237,18 @@ func SetLogger(logger Logger) Option {
 // New creates an instance of nio.
 func New(opt ...Option) (e *Nio) {
 	opts := options{
-		server: new(http.Server),
 		logger: newLogger(),
 	}
 	for _, o := range opt {
 		o(&opts)
 	}
+
 	e = &Nio{
-		Server:   opts.server,
 		maxParam: new(int),
 		Binder:   &DefaultBinder{},
 		logger:   opts.logger,
 	}
 	e.HTTPErrorHandler = e.DefaultHTTPErrorHandler
-
-	// TODO: remove server
-	e.Server.Handler = e
 	e.pool.New = func() interface{} {
 		return e.NewContext(nil, nil)
 	}
@@ -283,7 +261,7 @@ func (e *Nio) NewContext(r *http.Request, w http.ResponseWriter) Context {
 	return &context{
 		request:  r,
 		response: NewResponse(w),
-		store:    make(Map),
+		store:    make(map[string]interface{}),
 		nio:      e,
 		pvalues:  make([]string, *e.maxParam),
 		handler:  NotFoundHandler,
@@ -310,7 +288,7 @@ func (e *Nio) DefaultHTTPErrorHandler(err error, c Context) {
 		msg = http.StatusText(code)
 	}
 	if _, ok := msg.(string); ok {
-		msg = Map{"message": msg}
+		msg = map[string]interface{}{"message": msg}
 	}
 
 	// Send response
@@ -550,33 +528,6 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Release context
 	e.pool.Put(c)
-}
-
-// Start starts an HTTP server.
-func (e *Nio) Start(address string) error {
-	e.Server.Addr = address
-	return e.Server.ListenAndServe()
-}
-
-// StartTLS starts an HTTPS server.
-func (e *Nio) StartTLS(address string, certFile, keyFile string) (err error) {
-	if certFile == "" || keyFile == "" {
-		return errors.New("invalid tls configuration")
-	}
-	e.Server.Addr = address
-	return e.Server.ListenAndServeTLS(certFile, keyFile)
-}
-
-// Close immediately stops the server.
-// It internally calls `http.Server#Close()`.
-func (e *Nio) Close() error {
-	return e.Server.Close()
-}
-
-// Shutdown stops server the gracefully.
-// It internally calls `http.Server#Shutdown()`.
-func (e *Nio) Shutdown(ctx stdContext.Context) error {
-	return e.Server.Shutdown(ctx)
 }
 
 func (e *Nio) Logger() Logger {

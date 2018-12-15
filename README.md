@@ -34,7 +34,7 @@ func main() {
 	n.GET("/", hello)
 
 	// Start server
-	log.Fatal(n.Start(":1323"))
+	log.Fatal(http.ListenAndServe(":1323", n))
 }
 
 // Handler

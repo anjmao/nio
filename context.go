@@ -173,7 +173,7 @@ type (
 		pvalues  []string
 		query    url.Values
 		handler  HandlerFunc
-		store    Map
+		store    map[string]interface{}
 		nio      *Nio
 	}
 )
@@ -300,7 +300,7 @@ func (c *context) Get(key string) interface{} {
 
 func (c *context) Set(key string, val interface{}) {
 	if c.store == nil {
-		c.store = make(Map)
+		c.store = make(map[string]interface{})
 	}
 	c.store[key] = val
 }
