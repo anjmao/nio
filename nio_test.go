@@ -5,6 +5,7 @@ import (
 	stdContext "context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -84,6 +85,15 @@ func TestNioStatic(t *testing.T) {
 	c, r = request(http.MethodGet, "/folder", e)
 	assert.Equal(http.StatusOK, c)
 	assert.Equal(true, strings.HasPrefix(r, "<!doctype html>"))
+}
+
+func TestNioLogger(t *testing.T) {
+	buf := new(bytes.Buffer)
+	e := New(SetLogger(NewLogger(ioutil.Discard, ioutil.Discard, buf)))
+
+	e.Logger().Error("ups")
+
+	assert.Contains(t, buf.String(), "ups")
 }
 
 func TestNioFile(t *testing.T) {

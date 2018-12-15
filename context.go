@@ -160,6 +160,9 @@ type (
 
 		// Nio returns the `Nio` instance.
 		Nio() *Nio
+
+		// Logger returns default logger
+		Logger() Logger
 	}
 
 	context struct {
@@ -482,6 +485,10 @@ func (c *context) Handler() HandlerFunc {
 
 func (c *context) SetHandler(h HandlerFunc) {
 	c.handler = h
+}
+
+func (c *context) Logger() Logger {
+	return c.nio.Logger()
 }
 
 func (c *context) reset(r *http.Request, w http.ResponseWriter) {
