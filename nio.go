@@ -502,7 +502,7 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := e.pool.Get().(*context)
 	c.reset(r, w)
 
-	h := NotFoundHandler
+	var h HandlerFunc
 
 	if e.premiddleware == nil {
 		e.router.find(r.Method, getPath(r), c)
