@@ -1,4 +1,5 @@
-# Nio
+<img src="https://raw.githubusercontent.com/go-nio/nio/master/nio-logo.png" width="160" />
+
 ![](https://img.shields.io/travis/go-nio/nio.svg) ![](https://img.shields.io/codecov/c/github/go-nio/nio.svg) [![GoDoc](https://godoc.org/github.com/go-nio/nio?status.svg)](http://godoc.org/github.com/go-nio/nio)
 
 ## Feature
