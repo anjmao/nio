@@ -9,7 +9,7 @@ Example:
     "net/http"
 
     "github.com/go-nio/nio"
-    "github.com/go-nio/nio/middleware"
+    "github.com/go-nio/nio/mw"
   )
 
   // Handler
@@ -22,8 +22,8 @@ Example:
     e := nio.New()
 
     // Middleware
-    e.Use(middleware.Logger())
-    e.Use(middleware.Recover())
+    e.Use(mw.Logger())
+    e.Use(mw.Recover())
 
     // Routes
     e.GET("/", hello)
@@ -42,7 +42,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	stdLog "log"
 	"net/http"
 	"net/url"
 	"path"
@@ -50,14 +49,11 @@ import (
 	"reflect"
 	"runtime"
 	"sync"
-
-	"github.com/go-nio/nio/log"
 )
 
 type (
 	// Nio is the top-level framework instance.
 	Nio struct {
-		StdLogger        *stdLog.Logger
 		premiddleware    []MiddlewareFunc
 		middleware       []MiddlewareFunc
 		maxParam         *int
@@ -71,6 +67,7 @@ type (
 		HTTPErrorHandler HTTPErrorHandler
 		Binder           Binder
 		Renderer         Renderer
+		logger           Logger
 	}
 
 	// Route contains a handler and information for matching against requests.
@@ -249,7 +246,7 @@ func Server(server *http.Server) Option {
 	}
 }
 
-func ReplaceLogger(logger Logger) Option {
+func SetLogger(logger Logger) Option {
 	return func(o *options) {
 		o.logger = logger
 	}
@@ -257,17 +254,23 @@ func ReplaceLogger(logger Logger) Option {
 
 // New creates an instance of nio.
 func New(opt ...Option) (e *Nio) {
-	opts := options{server: new(http.Server)}
+	opts := options{
+		server: new(http.Server),
+		logger: newLogger(),
+	}
 	for _, o := range opt {
 		o(&opts)
 	}
 	e = &Nio{
 		Server:   opts.server,
 		maxParam: new(int),
+		Binder:   &DefaultBinder{},
+		logger:   opts.logger,
 	}
-	e.Server.Handler = e
 	e.HTTPErrorHandler = e.DefaultHTTPErrorHandler
-	e.Binder = &DefaultBinder{}
+
+	// TODO: remove server
+	e.Server.Handler = e
 	e.pool.New = func() interface{} {
 		return e.NewContext(nil, nil)
 	}
@@ -318,7 +321,7 @@ func (e *Nio) DefaultHTTPErrorHandler(err error, c Context) {
 			err = c.JSON(code, msg)
 		}
 		if err != nil {
-			log.Error(err)
+			e.Logger().Error(err)
 		}
 	}
 }
@@ -574,6 +577,10 @@ func (e *Nio) Close() error {
 // It internally calls `http.Server#Shutdown()`.
 func (e *Nio) Shutdown(ctx stdContext.Context) error {
 	return e.Server.Shutdown(ctx)
+}
+
+func (e *Nio) Logger() Logger {
+	return e.logger
 }
 
 // NewHTTPError creates a new HTTPError instance.

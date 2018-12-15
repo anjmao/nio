@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"net"
 	"net/http"
-
-	"github.com/go-nio/nio/log"
 )
 
 type (
@@ -54,7 +52,6 @@ func (r *Response) After(fn func()) {
 // used to send error codes.
 func (r *Response) WriteHeader(code int) {
 	if r.Committed {
-		log.Warningln("response already committed")
 		return
 	}
 	for _, fn := range r.beforeFuncs {

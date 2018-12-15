@@ -168,7 +168,7 @@ func NewLogger(infoW, warningW, errorW io.Writer) Logger {
 	return NewLoggerWithVerbosity(infoW, warningW, errorW, 0)
 }
 
-// NewLoggerWithVerbosity creates a loggerV2 with the provided writers and
+// NewLoggerWithVerbosity creates a logger with the provided writers and
 // verbosity level.
 func NewLoggerWithVerbosity(infoW, warningW, errorW io.Writer, v int) Logger {
 	var m []*log.Logger
