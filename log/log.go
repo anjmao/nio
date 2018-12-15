@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+// Logger is default nio logging interface
 type Logger interface {
 	// Info logs to INFO log. Arguments are handled in the manner of fmt.Print.
 	Info(args ...interface{})

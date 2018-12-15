@@ -125,7 +125,8 @@ const (
 
 const (
 	charsetUTF8 = "charset=UTF-8"
-	PROPFIND    = "PROPFIND"
+	// PROPFIND HTTP Header
+	PROPFIND = "PROPFIND"
 )
 
 // Headers
