@@ -13,5 +13,5 @@ func main() {
 		return c.String(http.StatusOK, "hello")
 	})
 
-	n.Start(":9000")
+	http.ListenAndServe(":9000", n)
 }

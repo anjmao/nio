@@ -2,9 +2,7 @@ package nio
 
 import (
 	"bytes"
-	stdContext "context"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -417,8 +415,7 @@ func TestNioContext(t *testing.T) {
 func TestNioStart(t *testing.T) {
 	e := New()
 	go func() {
-		err := e.Start(":0")
-		fmt.Println("erroras", err)
+		err := http.ListenAndServe(":0", e)
 		assert.NoError(t, err)
 	}()
 	time.Sleep(200 * time.Millisecond)
@@ -427,15 +424,13 @@ func TestNioStart(t *testing.T) {
 func TestNioStartTLS(t *testing.T) {
 	e := New()
 	go func() {
-		err := e.StartTLS(":0", "_fixture/certs/cert.pem", "_fixture/certs/key.pem")
+		err := http.ListenAndServeTLS(":0", "_fixture/certs/cert.pem", "_fixture/certs/key.pem", e)
 		// Prevent the test to fail after closing the servers
 		if err != http.ErrServerClosed {
 			assert.NoError(t, err)
 		}
 	}()
 	time.Sleep(200 * time.Millisecond)
-
-	e.Close()
 }
 
 func testMethod(t *testing.T, method, path string, e *Nio) {
@@ -461,46 +456,4 @@ func TestHTTPError(t *testing.T) {
 		"code": 12,
 	})
 	assert.Equal(t, "code=400, message=map[code:12]", err.Error())
-}
-
-func TestNioClose(t *testing.T) {
-	e := New()
-	errCh := make(chan error)
-
-	go func() {
-		errCh <- e.Start(":0")
-	}()
-
-	time.Sleep(200 * time.Millisecond)
-
-	if err := e.Close(); err != nil {
-		t.Fatal(err)
-	}
-
-	assert.NoError(t, e.Close())
-
-	err := <-errCh
-	assert.Equal(t, err.Error(), "http: Server closed")
-}
-
-func TestNioShutdown(t *testing.T) {
-	e := New()
-	errCh := make(chan error)
-
-	go func() {
-		errCh <- e.Start(":0")
-	}()
-
-	time.Sleep(200 * time.Millisecond)
-
-	if err := e.Close(); err != nil {
-		t.Fatal(err)
-	}
-
-	ctx, cancel := stdContext.WithTimeout(stdContext.Background(), 10*time.Second)
-	defer cancel()
-	assert.NoError(t, e.Shutdown(ctx))
-
-	err := <-errCh
-	assert.Equal(t, err.Error(), "http: Server closed")
 }
