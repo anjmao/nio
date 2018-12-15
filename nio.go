@@ -29,7 +29,7 @@ Example:
     n.GET("/", hello)
 
     // Start server
-    e.Logger().Fatal(http.ListenAndServe(":1323", e))
+    n.Logger().Fatal(http.ListenAndServe(":1323", n))
   }
 
 Learn more at https://github.com/go-nio/nio
