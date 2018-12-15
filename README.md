@@ -1,5 +1,4 @@
-
-![](https://img.shields.io/travis/go-nio/go.svg) ![](https://img.shields.io/codecov/c/github/go-nio/nio.svg)
+![](https://img.shields.io/travis/go-nio/nio.svg) ![](https://img.shields.io/codecov/c/github/go-nio/nio.svg)
 
 
 # Nio
