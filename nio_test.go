@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-nio/nio/log"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -87,7 +89,7 @@ func TestNioStatic(t *testing.T) {
 
 func TestNioLogger(t *testing.T) {
 	buf := new(bytes.Buffer)
-	e := New(SetLogger(NewLogger(ioutil.Discard, ioutil.Discard, buf)))
+	e := New(SetLogger(log.NewLogger(ioutil.Discard, ioutil.Discard, buf)))
 
 	e.Logger().Error("ups")
 
