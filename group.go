@@ -12,7 +12,7 @@ type (
 	Group struct {
 		prefix     string
 		middleware []MiddlewareFunc
-		nio       *Nio
+		nio        *Nio
 	}
 )
 

@@ -89,7 +89,7 @@ func NewLoggerWithVerbosity(infoW, warningW, errorW io.Writer, v int) Logger {
 	return &loggerT{m: m, v: v}
 }
 
-// newLogger creates a logger to be used as default logger.
+// NewDefaultLogger creates a logger to be used as default logger.
 // All logs are written to stderr.
 func NewDefaultLogger() Logger {
 	errorW := ioutil.Discard

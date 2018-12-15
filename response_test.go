@@ -22,4 +22,3 @@ func TestResponse(t *testing.T) {
 	res.Write([]byte("test"))
 	assert.Equal(t, "nio", rec.Header().Get(HeaderServer))
 }
-

@@ -230,6 +230,7 @@ type options struct {
 // A Option sets options such as credentials, tls, etc.
 type Option func(*options)
 
+// SetLogger allows to override default nio logger
 func SetLogger(logger log.Logger) Option {
 	return func(o *options) {
 		o.logger = logger
@@ -532,6 +533,7 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.pool.Put(c)
 }
 
+// Logger returns nio logger
 func (e *Nio) Logger() log.Logger {
 	return e.logger
 }
@@ -550,6 +552,7 @@ func (he *HTTPError) Error() string {
 	return fmt.Sprintf("code=%d, message=%v", he.Code, he.Message)
 }
 
+// SetInternal sets internal error on HTTPError
 func (he *HTTPError) SetInternal(err error) *HTTPError {
 	he.Internal = err
 	return he
