@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/go-nio/nio/log"
 )
 
 type (
@@ -162,7 +164,7 @@ type (
 		Nio() *Nio
 
 		// Logger returns default logger
-		Logger() Logger
+		Logger() log.Logger
 	}
 
 	context struct {
@@ -487,7 +489,7 @@ func (c *context) SetHandler(h HandlerFunc) {
 	c.handler = h
 }
 
-func (c *context) Logger() Logger {
+func (c *context) Logger() log.Logger {
 	return c.nio.Logger()
 }
 

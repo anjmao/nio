@@ -1,5 +1,5 @@
 /*
-package nio implements high performance, minimalist Go web framework.
+Package nio implements modern and productive Go HTTP framework.
 
 Example:
 
@@ -19,20 +19,20 @@ Example:
 
   func main() {
     // Nio instance
-    e := nio.New()
+    n := nio.New()
 
     // Middleware
-    e.Use(mw.Logger())
-    e.Use(mw.Recover())
+    n.Use(mw.Logger())
+    n.Use(mw.Recover())
 
     // Routes
-    e.GET("/", hello)
+    n.GET("/", hello)
 
     // Start server
-    e.Logger.Fatal(e.Start(":1323"))
+    e.Logger().Fatal(http.ListenAndServe(":1323", e))
   }
 
-Learn more at https://nio.dostack.com
+Learn more at https://github.com/go-nio/nio
 */
 package nio
 
@@ -48,6 +48,8 @@ import (
 	"reflect"
 	"runtime"
 	"sync"
+
+	"github.com/go-nio/nio/log"
 )
 
 type (
@@ -59,7 +61,7 @@ type (
 		router           *router
 		notFoundHandler  HandlerFunc
 		pool             sync.Pool
-		logger           Logger
+		logger           log.Logger
 		Debug            bool
 		HTTPErrorHandler HTTPErrorHandler
 		Binder           Binder
@@ -222,13 +224,13 @@ var (
 )
 
 type options struct {
-	logger Logger
+	logger log.Logger
 }
 
 // A Option sets options such as credentials, tls, etc.
 type Option func(*options)
 
-func SetLogger(logger Logger) Option {
+func SetLogger(logger log.Logger) Option {
 	return func(o *options) {
 		o.logger = logger
 	}
@@ -237,7 +239,7 @@ func SetLogger(logger Logger) Option {
 // New creates an instance of nio.
 func New(opt ...Option) (e *Nio) {
 	opts := options{
-		logger: newLogger(),
+		logger: log.NewDefaultLogger(),
 	}
 	for _, o := range opt {
 		o(&opts)
@@ -530,7 +532,7 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.pool.Put(c)
 }
 
-func (e *Nio) Logger() Logger {
+func (e *Nio) Logger() log.Logger {
 	return e.logger
 }
 
