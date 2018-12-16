@@ -2,12 +2,13 @@
 
 ![](https://img.shields.io/travis/go-nio/nio.svg) ![](https://img.shields.io/codecov/c/github/go-nio/nio.svg) [![GoDoc](https://godoc.org/github.com/go-nio/nio?status.svg)](http://godoc.org/github.com/go-nio/nio) [![Go Report Card](https://goreportcard.com/badge/github.com/go-nio/nio)](https://goreportcard.com/report/github.com/go-nio/nio)
 
-## Feature
+## Features
 
+* <b>Zero</b> external runtime dependencies
 * Smart HTTP Routing
 * Data binding for JSON, XML and form payload
 * Middlewares on global, group or single route level
-* <b>Zero</b> external dependencies
+* Full control of http server
 
 ## Getting Started
 
@@ -55,6 +56,10 @@ And finally run it
 ```
 go run main.go
 ```
+
+## More examples
+
+See [examples](https://github.com/go-nio/nio/tree/master/examples)
 
 ## Built With
 
