@@ -1,6 +1,12 @@
+<p align="center">
 <img src="https://raw.githubusercontent.com/go-nio/nio/master/nio-logo.png" width="160" />
+</p>
 
+<div align="center">
+    
 ![](https://img.shields.io/travis/go-nio/nio.svg) ![](https://img.shields.io/codecov/c/github/go-nio/nio.svg) [![GoDoc](https://godoc.org/github.com/go-nio/nio?status.svg)](http://godoc.org/github.com/go-nio/nio) [![Go Report Card](https://goreportcard.com/badge/github.com/go-nio/nio)](https://goreportcard.com/report/github.com/go-nio/nio)
+
+</div>
 
 ## Features
 
