@@ -40,8 +40,6 @@ type Logger interface {
 	// Fatalf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
 	// Implementations may also call os.Exit() with a non-zero exit code.
 	Fatalf(format string, args ...interface{})
-	// V reports whether verbosity level l is at least the requested verbose level.
-	V(l int) bool
 }
 
 const (
@@ -164,8 +162,4 @@ func (g *loggerT) Fatalln(args ...interface{}) {
 func (g *loggerT) Fatalf(format string, args ...interface{}) {
 	g.m[fatalLog].Fatalf(format, args...)
 	// No need to call os.Exit() again because log.Logger.Fatal() calls os.Exit().
-}
-
-func (g *loggerT) V(l int) bool {
-	return l <= g.v
 }
