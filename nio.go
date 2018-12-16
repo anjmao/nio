@@ -82,9 +82,6 @@ type (
 		Internal error // Stores the error returned by an external dependency
 	}
 
-	// MiddlewareFunc defines a function to process middleware.
-	MiddlewareFunc func(HandlerFunc) HandlerFunc
-
 	// HandlerFunc defines a function to serve HTTP requests.
 	HandlerFunc func(Context) error
 
@@ -564,19 +561,6 @@ func WrapHandler(h http.Handler) HandlerFunc {
 	return func(c Context) error {
 		h.ServeHTTP(c.Response(), c.Request())
 		return nil
-	}
-}
-
-// WrapMiddleware wraps `func(http.Handler) http.Handler` into `nio.MiddlewareFunc`
-func WrapMiddleware(m func(http.Handler) http.Handler) MiddlewareFunc {
-	return func(next HandlerFunc) HandlerFunc {
-		return func(c Context) (err error) {
-			m(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				c.SetRequest(r)
-				err = next(c)
-			})).ServeHTTP(c.Response(), c.Request())
-			return
-		}
 	}
 }
 
