@@ -8,10 +8,10 @@ type todo struct {
 func newTodoStore() *todoStore {
 	return &todoStore{
 		todos: []*todo{
-			&todo{ID: "t1", Title: "Buy milk"},
-			&todo{ID: "t2", Title: "Feed gother"},
-			&todo{ID: "t3", Title: "Clean room"},
-			&todo{ID: "t4", Title: "Be happy"},
+			{ID: "t1", Title: "Buy milk"},
+			{ID: "t2", Title: "Feed gother"},
+			{ID: "t3", Title: "Clean room"},
+			{ID: "t4", Title: "Be happy"},
 		},
 	}
 }
