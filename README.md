@@ -4,7 +4,10 @@
 
 <div align="center">
     
-![](https://img.shields.io/travis/go-nio/nio.svg) ![](https://img.shields.io/codecov/c/github/go-nio/nio.svg) [![GoDoc](https://godoc.org/github.com/go-nio/nio?status.svg)](http://godoc.org/github.com/go-nio/nio) [![Go Report Card](https://goreportcard.com/badge/github.com/go-nio/nio)](https://goreportcard.com/report/github.com/go-nio/nio)
+[![Build Status](https://travis-ci.org/go-nio/nio.svg?branch=master)](https://travis-ci.org/go-nio/nio)
+[![codecov](https://codecov.io/gh/go-nio/nio/branch/master/graph/badge.svg)](https://codecov.io/gh/go-nio/nio) 
+[![GoDoc](https://godoc.org/github.com/go-nio/nio?status.svg)](http://godoc.org/github.com/go-nio/nio) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-nio/nio)](https://goreportcard.com/report/github.com/go-nio/nio)
 
 </div>
 
