@@ -51,14 +51,14 @@ func TestContext(t *testing.T) {
 	tmpl := &Template{
 		templates: template.Must(template.New("hello").Parse("Hello, {{.}}!")),
 	}
-	c.nio.Renderer = tmpl
+	c.nio.renderer = tmpl
 	err := c.Render(http.StatusOK, "hello", "Jon Snow")
 	if assert.NoError(err) {
 		assert.Equal(http.StatusOK, rec.Code)
 		assert.Equal("Hello, Jon Snow!", rec.Body.String())
 	}
 
-	c.nio.Renderer = nil
+	c.nio.renderer = nil
 	err = c.Render(http.StatusOK, "hello", "Jon Snow")
 	assert.Error(err)
 

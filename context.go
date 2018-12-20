@@ -308,15 +308,15 @@ func (c *context) Set(key string, val interface{}) {
 }
 
 func (c *context) Bind(i interface{}) error {
-	return c.nio.Binder.Bind(i, c)
+	return c.nio.binder.Bind(i, c)
 }
 
 func (c *context) Render(code int, name string, data interface{}) (err error) {
-	if c.nio.Renderer == nil {
+	if c.nio.renderer == nil {
 		return ErrRendererNotRegistered
 	}
 	buf := new(bytes.Buffer)
-	if err = c.nio.Renderer.Render(buf, name, data, c); err != nil {
+	if err = c.nio.renderer.Render(buf, name, data, c); err != nil {
 		return
 	}
 	return c.HTMLBlob(code, buf.Bytes())
@@ -474,7 +474,7 @@ func (c *context) Redirect(code int, url string) error {
 }
 
 func (c *context) Error(err error) {
-	c.nio.HTTPErrorHandler(err, c)
+	c.nio.httpErrorHandler(err, c)
 }
 
 func (c *context) Nio() *Nio {

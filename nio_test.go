@@ -3,6 +3,7 @@ package nio
 import (
 	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -49,8 +50,7 @@ func TestNio(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	// DefaultHTTPErrorHandler
-	e.DefaultHTTPErrorHandler(errors.New("error"), c)
+	e.defaultHTTPErrorHandler(errors.New("error"), c)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
@@ -89,11 +89,31 @@ func TestNioStatic(t *testing.T) {
 
 func TestNioLogger(t *testing.T) {
 	buf := new(bytes.Buffer)
-	e := New(SetLogger(log.NewLogger(ioutil.Discard, ioutil.Discard, buf)))
+	e := New(WithLogger(log.NewLogger(ioutil.Discard, ioutil.Discard, buf)))
 
 	e.Logger().Error("ups")
 
 	assert.Contains(t, buf.String(), "ups")
+}
+
+func TestNioWithOptions(t *testing.T) {
+	binder := &mockBinder{}
+	renderer := &mockRenderer{}
+	logger := log.NewLogger(ioutil.Discard, ioutil.Discard, new(bytes.Buffer))
+	mockHTTPErrorHandler := func(error, Context) {
+	}
+
+	e := New(
+		WithLogger(logger),
+		WithBinder(binder),
+		WithRenderer(renderer),
+		WithHTTPErrorHandler(mockHTTPErrorHandler),
+	)
+
+	assert.Equal(t, binder, e.binder)
+	assert.Equal(t, renderer, e.renderer)
+	assert.Equal(t, logger, e.logger)
+	assert.NotNil(t, e.httpErrorHandler)
 }
 
 func TestNioFile(t *testing.T) {
@@ -436,4 +456,16 @@ func TestHTTPError(t *testing.T) {
 		"code": 12,
 	})
 	assert.Equal(t, "code=400, message=map[code:12]", err.Error())
+}
+
+type mockBinder struct{}
+
+func (mockBinder) Bind(i interface{}, c Context) error {
+	return nil
+}
+
+type mockRenderer struct{}
+
+func (mockRenderer) Render(io.Writer, string, interface{}, Context) error {
+	return nil
 }

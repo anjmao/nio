@@ -63,9 +63,9 @@ type (
 		pool             sync.Pool
 		logger           log.Logger
 		Debug            bool
-		HTTPErrorHandler HTTPErrorHandler
-		Binder           Binder
-		Renderer         Renderer
+		httpErrorHandler HTTPErrorHandler
+		binder           Binder
+		renderer         Renderer
 	}
 
 	// Route contains a handler and information for matching against requests.
@@ -222,23 +222,49 @@ var (
 )
 
 type options struct {
-	logger log.Logger
+	logger           log.Logger
+	binder           Binder
+	renderer         Renderer
+	httpErrorHandler HTTPErrorHandler
 }
 
 // A Option sets options such as credentials, tls, etc.
 type Option func(*options)
 
-// SetLogger allows to override default nio logger
-func SetLogger(logger log.Logger) Option {
+// WithLogger allows to override default nio logger
+func WithLogger(logger log.Logger) Option {
 	return func(o *options) {
 		o.logger = logger
+	}
+}
+
+// WithBinder allows to override default nio binder
+func WithBinder(binder Binder) Option {
+	return func(o *options) {
+		o.binder = binder
+	}
+}
+
+// WithRenderer allows to register nio view renderer
+func WithRenderer(renderer Renderer) Option {
+	return func(o *options) {
+		o.renderer = renderer
+	}
+}
+
+// WithHTTPErrorHandler allows to override default nio global error handler
+func WithHTTPErrorHandler(handler HTTPErrorHandler) Option {
+	return func(o *options) {
+		o.httpErrorHandler = handler
 	}
 }
 
 // New creates an instance of nio.
 func New(opt ...Option) (e *Nio) {
 	opts := options{
-		logger: log.NewDefaultLogger(),
+		logger:   log.NewDefaultLogger(),
+		binder:   &DefaultBinder{},
+		renderer: nil,
 	}
 	for _, o := range opt {
 		o(&opts)
@@ -246,10 +272,18 @@ func New(opt ...Option) (e *Nio) {
 
 	e = &Nio{
 		maxParam: new(int),
-		Binder:   &DefaultBinder{},
+		binder:   opts.binder,
 		logger:   opts.logger,
+		renderer: opts.renderer,
 	}
-	e.HTTPErrorHandler = e.DefaultHTTPErrorHandler
+
+	// http error handler must be set after nio instance
+	if opts.httpErrorHandler != nil {
+		e.httpErrorHandler = opts.httpErrorHandler
+	} else {
+		e.httpErrorHandler = e.defaultHTTPErrorHandler
+	}
+
 	e.pool.New = func() interface{} {
 		return e.NewContext(nil, nil)
 	}
@@ -266,42 +300,6 @@ func (e *Nio) NewContext(r *http.Request, w http.ResponseWriter) Context {
 		nio:      e,
 		pvalues:  make([]string, *e.maxParam),
 		handler:  NotFoundHandler,
-	}
-}
-
-// DefaultHTTPErrorHandler is the default HTTP error handler. It sends a JSON response
-// with status code.
-func (e *Nio) DefaultHTTPErrorHandler(err error, c Context) {
-	var (
-		code = http.StatusInternalServerError
-		msg  interface{}
-	)
-
-	if he, ok := err.(*HTTPError); ok {
-		code = he.Code
-		msg = he.Message
-		if he.Internal != nil {
-			err = fmt.Errorf("%v, %v", err, he.Internal)
-		}
-	} else if e.Debug {
-		msg = err.Error()
-	} else {
-		msg = http.StatusText(code)
-	}
-	if _, ok := msg.(string); ok {
-		msg = map[string]interface{}{"message": msg}
-	}
-
-	// Send response
-	if !c.Response().Committed {
-		if c.Request().Method == http.MethodHead { // Issue #608
-			err = c.NoContent(code)
-		} else {
-			err = c.JSON(code, msg)
-		}
-		if err != nil {
-			e.Logger().Error(err)
-		}
 	}
 }
 
@@ -524,7 +522,7 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Execute chain
 	if err := h(c); err != nil {
-		e.HTTPErrorHandler(err, c)
+		e.httpErrorHandler(err, c)
 	}
 
 	// Release context
@@ -534,6 +532,42 @@ func (e *Nio) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Logger returns nio logger
 func (e *Nio) Logger() log.Logger {
 	return e.logger
+}
+
+// defaultHTTPErrorHandler is the default HTTP error handler. It sends a JSON response
+// with status code.
+func (e *Nio) defaultHTTPErrorHandler(err error, c Context) {
+	var (
+		code = http.StatusInternalServerError
+		msg  interface{}
+	)
+
+	if he, ok := err.(*HTTPError); ok {
+		code = he.Code
+		msg = he.Message
+		if he.Internal != nil {
+			err = fmt.Errorf("%v, %v", err, he.Internal)
+		}
+	} else if e.Debug {
+		msg = err.Error()
+	} else {
+		msg = http.StatusText(code)
+	}
+	if _, ok := msg.(string); ok {
+		msg = map[string]interface{}{"message": msg}
+	}
+
+	// Send response
+	if !c.Response().Committed {
+		if c.Request().Method == http.MethodHead { // Issue #608
+			err = c.NoContent(code)
+		} else {
+			err = c.JSON(code, msg)
+		}
+		if err != nil {
+			e.Logger().Error(err)
+		}
+	}
 }
 
 // NewHTTPError creates a new HTTPError instance.
