@@ -72,7 +72,7 @@ See [examples](https://github.com/go-nio/nio/tree/master/examples)
 
 ## Built With
 
-* [Go](https://www.golang.org/) - The best programming language in the world
+* [Go](https://www.golang.org/)
 
 ## Contributing
 
