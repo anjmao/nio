@@ -1,11 +1,18 @@
-package main
+package todo
 
 type todo struct {
 	ID    string `json:"id,omitempty"`
 	Title string `json:"title,omitempty"`
 }
 
-func newTodoStore() *todoStore {
+type TodoStore interface {
+	GetAll() ([]*todo, error)
+	GetByID(todoID string) (*todo, error)
+	Add(newTodo *todo) error
+	Delete(todoID string) error
+}
+
+func NewTodoStore() TodoStore {
 	return &todoStore{
 		todos: []*todo{
 			{ID: "t1", Title: "Buy milk"},
@@ -33,12 +40,12 @@ func (s *todoStore) GetByID(todoID string) (*todo, error) {
 	return nil, nil
 }
 
-func (s *todoStore) AddTodo(newTodo *todo) error {
+func (s *todoStore) Add(newTodo *todo) error {
 	s.todos = append(s.todos, newTodo)
 	return nil
 }
 
-func (s *todoStore) DeleteTodo(todoID string) error {
+func (s *todoStore) Delete(todoID string) error {
 	for i, t := range s.todos {
 		if t.ID == todoID {
 			s.todos = append(s.todos[:i], s.todos[i+1:]...)
