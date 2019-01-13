@@ -9,7 +9,7 @@ Example:
     "net/http"
 
     "github.com/go-nio/nio"
-    "github.com/go-nio/mw"
+    "github.com/go-nio/nio/mw"
   )
 
   // Handler
