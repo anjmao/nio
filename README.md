@@ -19,6 +19,22 @@
 * Middlewares on global, group or single route level
 * Full control of http server
 
+### Builtin middlewares
+* Basic Auth
+* Body Dump
+* Body Limit
+* Compress (GZip)
+* CORS
+* CSRF
+* Key Auth
+* Method Override
+* Recover
+* Request ID
+* Rewrite
+* Secure
+* Slash
+* Static
+
 ## Getting Started
 
 ### Prerequisites
