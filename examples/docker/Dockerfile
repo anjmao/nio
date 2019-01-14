@@ -5,5 +5,4 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflag
 
 FROM alpine
 COPY --from=builder /src/app/do /src/app/do
-USER nobody:nobody
-CMD ["/src/app/do"]
+ENTRYPOINT ["/src/app/do"]
