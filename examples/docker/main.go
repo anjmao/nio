@@ -1,21 +1,31 @@
 package main
 
 import (
-	"log"
+	"flag"
 	"net/http"
+	"time"
 
 	"github.com/go-nio/nio"
 )
 
-func main() {
-	// Nio instance
-	n := nio.New()
+var (
+	addr = flag.String("addr", ":9000", "Server serve address")
+)
 
-	// Routes
+func main() {
+	flag.Parse()
+
+	n := nio.New()
 	n.GET("/", hello)
 
-	// Start server
-	log.Fatal(http.ListenAndServe(":1323", n))
+	srv := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Addr:         *addr,
+		Handler:      n,
+	}
+	srv.ListenAndServe()
 }
 
 // Handler

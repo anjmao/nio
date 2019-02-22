@@ -1,11 +1,17 @@
 package main
 
 import (
+	"flag"
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-nio/nio"
+)
+
+var (
+	addr = flag.String("addr", ":9000", "Server serve address")
 )
 
 type templateRenderer struct {
@@ -17,20 +23,29 @@ func (t *templateRenderer) Render(w io.Writer, name string, data interface{}, c 
 }
 
 func main() {
-	// register views
+	flag.Parse()
+
+	// Register views.
 	renderer := &templateRenderer{
 		templates: template.Must(template.ParseGlob("views/*.html")),
 	}
 
 	n := nio.New(nio.WithRenderer(renderer))
 
-	// serve static files under /static path from assets folder
+	// Serve static files under /static path from assets folder.
 	n.Static("/static", "assets")
 
-	// render index.html
+	// Render index.html.
 	n.GET("/", func(c nio.Context) error {
 		return c.Render(http.StatusOK, "index.html", map[string]interface{}{"name": "Nio!"})
 	})
 
-	http.ListenAndServe(":9000", n)
+	srv := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Addr:         *addr,
+		Handler:      n,
+	}
+	srv.ListenAndServe()
 }

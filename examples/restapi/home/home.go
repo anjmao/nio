@@ -6,7 +6,7 @@ import (
 	"github.com/go-nio/nio"
 )
 
-// RegisterHandlers registers routes and handlers
+// RegisterHandlers registers routes and handlers.
 func RegisterHandlers(n *nio.Nio) {
 	h := &handlers{}
 	n.GET("/", h.GetAllModules)

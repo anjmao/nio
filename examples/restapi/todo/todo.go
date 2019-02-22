@@ -6,7 +6,7 @@ import (
 	"github.com/go-nio/nio"
 )
 
-// RegisterHandlers registers todo routes and inject todo store
+// RegisterHandlers registers todo routes and inject todo store.
 func RegisterHandlers(n *nio.Nio, store TodoStore) {
 	h := &handlers{store: store}
 	n.GET("/todos", h.GetAllTodos)
