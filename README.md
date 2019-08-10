@@ -11,6 +11,10 @@
 
 </div>
 
+# Note
+
+All development and improvements are moved to [goroute](https://github.com/goroute/route).
+
 ## Features
 
 * <b>Zero</b> external runtime dependencies
